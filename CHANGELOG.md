@@ -1,12 +1,20 @@
 # Changelog
 
+## 3.60i rail wall-smoke correction - 24 November 2026
+
+- A rail wall mark emits eight small smoke puffs in sequence, 180 ms apart, starting after the rail core. All originate at the same impact point and rise vertically; they are no longer spread sideways in parallel.
+- Each puff grows to six times its starting diameter over one second, then fades for two seconds. The fixed smoke frame is recentered at the impact, removing its baked displacement. The encoded renderer scale stays within range, so the requested growth is preserved.
+- Existing 3D smoke controls, presets, benchmark cases and driver/CPU requirements apply. No additional assets, cvars, renderer-interface fields or effect-pool memory are needed.
+- This replaces the preceding twelve-puff/fivefold cloud design. That design's large scale values were clipped by the renderer and did not produce the stated visual size increase.
+- Wall/lift vibration with fixed 100 Hz physics and unlimited rendering remains an open issue; the owner reports that a 100 FPS rendering limit avoids it.
+
 ## 3.60i robustness review and rail impact smoke - 24 November 2026
 
 - Protocol-34 packets with incomplete headers are rejected before channel acknowledgements change. Valid client/server packet layouts and resource limits are retained.
 - Network strings preserve high-bit text bytes and consume the complete field when the 2048-byte local result is truncated, keeping the next field aligned.
 - Size buffers reject negative/overflowing reservations. Text append now removes its old terminator before reserving space, avoiding a write before the buffer after an allowed overflow.
 - PAK loading checks header/directory reads, directory alignment, file boundaries and entry offsets/lengths, and releases temporary resources on rejection. The 65,536-entry limit and existing search order remain.
-- The modern rail wall-impact cloud has 12 puffs instead of 4, at five times the previous linear size. Expansion remains one second and fade-out two seconds. Existing smoke controls, driver/CPU gates, presets, benchmarks and the bounded effect pool apply; no new assets are required.
+- The previous rail cloud design is superseded by the rail wall-smoke correction above, including the renderer scale-clipping correction.
 - Reviewed R1Q2, EGL, Yamagi and Q2PRO source. BDGN already has renderer batching/state caching and several server protections; this update adds focused checks without importing a new renderer, protocol extensions or movement rules.
 - Validation: 86 message/buffer/header cases, including unchanged channel results for valid packets; the old text-append underwrite is reproduced and the corrected path stays within bounds. Boundary checks accept all 31 installed PAKs and their 39,690 entries. Changed functions pass C89 declaration/syntax checks.
 - Build Release | Win32 and Release_SSE | Win32 with Visual Studio 2005 to apply the source update.

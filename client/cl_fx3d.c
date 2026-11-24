@@ -100,7 +100,7 @@ typedef struct
 	int				mode;				/* FX_DISTORT 0 haze / 1 ring */
 	vec3_t			color, color1;		/* FX_LIGHT */
 	float			flicker;
-	vec3_t			view_ofs;			/* FX_VIEW: forward / right / up from the eye */
+	vec3_t			view_ofs;			/* FX_VIEW: eye offsets; FX_ANIM mode 1: world velocity */
 	qboolean		depthhack;
 	int				variant;
 	int				grow;				/* BDGN 3.56x: RF_PUFFS cloud grows from nothing over grow ms (ease out) */
@@ -562,28 +562,27 @@ void CL_FX3D_HitSmoke(vec3_t pos, vec3_t dir, int delay, qboolean hyper_hit)
 	}
 }
 
-/* 3.60i hotfix: a dense impact cloud, using the blaster/hyperblaster smoke
-   assets already selected by the effect texture menu. No extra asset loads.
-   Starts just after the rail core, grows for one second, fades for two.
-   Owner's 3.60i update: twelve puffs (3x), five times the linear size. */
+/* 3.60i: eight individual puffs emitted from the same wall mark, not a row
+   of parallel clouds. Each rises vertically and grows sixfold in one second,
+   then fades for two. Reuse the selected single-puff asset's final frame;
+   the renderer removes that frame's baked displacement before drawing it. */
 void CL_FX3D_RailImpactSmoke(vec3_t pos, vec3_t dir)
 {
- vec3_t n,side,org;
+ vec3_t n,org;
  int i,model;
  if (!CL_FX3D_On(cl_hdsmoke) || cl_nosmoke->value) return;
  VectorCopy(dir,n);
  if (!VectorNormalize(n)) VectorSet(n,0,0,1);
- PerpendicularVector(side,n);
  model=fx3d_model[M_HYPER_SMOKE]?M_HYPER_SMOKE:M_BLASTER_SMOKE;
- for (i=0;i<12;i++) {
+ VectorMA(pos,8.0f,n,org);
+ for (i=0;i<8;i++) {
   fx3d_t *f;
-  VectorMA(pos,8.0f+(i%4)*1.5f,n,org);
-  VectorMA(org,(i-5.5f)*3.0f,side,org);
-  f=FX_Anim(model,org,NULL,RF_PUFFS,701+i*20,
-    (re_frames_hint(model)-1)/3.0f,0.88f-(i%4)*0.06f);
+  f=FX_Anim(model,org,NULL,RF_PUFFS,701+i*180,1.0f,0.72f);
   if (f) {
    f->life=3000; f->grow=1000; f->fadein=120; f->fadeout=2000;
-   f->scale0=1.75f; f->scale1=9.0f;
+   f->fps=0; f->variant=f->frames-1; f->mode=1;
+   VectorSet(f->view_ofs,0,0,12.0f);
+   f->scale0=0.25f; f->scale1=1.5f;
   }
  }
 }
@@ -1254,6 +1253,11 @@ void CL_FX3D_AddEntities (void)
 			break;
 		case FX_ANIM:
 		case FX_VIEW:
+			if (f->kind == FX_ANIM && f->mode == 1)
+			{	/* Rail impact smoke: independent upward motion, no animated sideways drift. */
+				VectorMA(f->origin,t*0.001f,f->view_ofs,e.origin);
+				e.lightstyle=FX_LAYER_RAIL_SMOKE;
+			}
 			if (f->kind == FX_VIEW)
 			{	/* the own muzzle: follows the view */
 				VectorMA (cl.refdef.vieworg, f->view_ofs[0], cl.v_forward, e.origin);

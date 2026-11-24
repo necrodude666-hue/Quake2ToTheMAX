@@ -1346,7 +1346,8 @@ static qboolean R_DrawFXModel (entity_t *e)
 		static int			pt[FX_MAX_PUFFS];
 		vec3_t				light;
 		int					m = 0;
-		qboolean straight_alpha=(e->lightstyle&0xffff)==FX_LAYER_BFG_SMOKE;
+		qboolean rail_smoke=(e->lightstyle&0xffff)==FX_LAYER_RAIL_SMOKE;
+		qboolean straight_alpha=(e->lightstyle&0xffff)==FX_LAYER_BFG_SMOKE || rail_smoke;
 		float grow=1.0f;	/* BDGN 3.56x: a cloud that grows from nothing (client/ref.h FX_PUFF_SCALE_ONE) */
 		qboolean centred=false;
 		vec3_t centre={0,0,0};
@@ -1407,6 +1408,12 @@ static qboolean R_DrawFXModel (entity_t *e)
 					p0[k]=centre[k]+(p0[k]-centre[k])*grow;
 					p1[k]=centre[k]+(p1[k]-centre[k])*grow;
 					p2[k]=centre[k]+(p2[k]-centre[k])*grow;
+					if (rail_smoke)
+					{	/* Its fixed frame supplies size/texture, not a baked rising path. */
+						p0[k]-=centre[k];
+						p1[k]-=centre[k];
+						p2[k]-=centre[k];
+					}
 				}
 			}
 			else if (grow<1.0f)
