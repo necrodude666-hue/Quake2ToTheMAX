@@ -162,14 +162,16 @@ R_TextureAnimation
 Returns the proper texture for a given time and base texture
 ===============
 */
-image_t *R_TextureAnimation (mtexinfo_t *tex)
+image_t *R_TextureAnimationFrame (mtexinfo_t *tex, int frame)
 {
 	int		c;
 
-	if (!tex->next)
+	if (!tex->next || tex->numframes <= 0)
 		return tex->image;
 
-	c = currententity->frame % tex->numframes;
+	c = frame % tex->numframes;
+	if (c < 0)
+		c += tex->numframes;
 	while (c)
 	{
 		tex = tex->next;
@@ -177,6 +179,11 @@ image_t *R_TextureAnimation (mtexinfo_t *tex)
 	}
 
 	return tex->image;
+}
+
+image_t *R_TextureAnimation (mtexinfo_t *tex)
+{
+	return R_TextureAnimationFrame (tex, currententity->frame);
 }
 
 #if 0

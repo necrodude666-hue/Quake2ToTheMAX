@@ -16,6 +16,7 @@ static cvar_t *pixel_lighting,*pixel_bump,*pixel_models;
 /* BDGN 3.55h: up to PIXEL_MAX_LIGHTS dynamic lights per pixel, with surface normals, on world surfaces and models */
 #define PIXEL_MAX_LIGHTS 4
 static GLint pixel_pos_loc[PIXEL_MAX_LIGHTS],pixel_col_loc[PIXEL_MAX_LIGHTS],pixel_sampler,pixel_texel,pixel_bump_loc;
+static GLint pixel_height_lod,pixel_source_texel;
 static void (APIENTRY *pixel_uniform4f)(GLint,GLfloat,GLfloat,GLfloat,GLfloat);
 static void (APIENTRY *pixel_uniform1f)(GLint,GLfloat);
 static void (APIENTRY *pixel_texcoord3)(GLenum,GLfloat,GLfloat,GLfloat);
@@ -310,14 +311,20 @@ void GL_InitPixelLighting(void)
     The relief is taken from the texture's own brightness in the texture's s/t directions. */
  static const char *source=
   "#version 110\n"
-  "uniform vec4 lightPos[4],lightCol[4]; uniform sampler2D baseTexture; uniform vec2 texel; uniform float bump;\n"
+  "uniform vec4 lightPos[4],lightCol[4]; uniform sampler2D baseTexture; uniform vec2 texel,sourceTexel; uniform float bump,heightLod;\n"
   "varying vec3 P,N,S,T;\n"
   "float lum(vec3 c){return dot(c,vec3(0.299,0.587,0.114));}\n"
+  /* Colour noise in an HD replacement is not extra geometry. Filter height
+     at the original material density, while colour keeps its normal LOD. */
+  "float heightAt(vec2 uv,float bias){return lum(texture2D(baseTexture,uv,bias).rgb);}\n"
   "void main(){vec2 uv=gl_TexCoord[0].xy; vec4 base=texture2D(baseTexture,uv);"
   "vec3 g=normalize(N); vec3 n=g;"
-  "if(bump>0.){float h0=lum(base.rgb);"
-  "float hs=lum(texture2D(baseTexture,uv+vec2(texel.x,0.)).rgb)-h0;"
-  "float ht=lum(texture2D(baseTexture,uv+vec2(0.,texel.y)).rgb)-h0;"
+  "if(bump>0.){"
+  "vec2 dx=dFdx(uv)/sourceTexel,dy=dFdy(uv)/sourceTexel;"
+  "float lod=.5*log2(max(1.,min(dot(dx,dx),dot(dy,dy))));"
+  "float bias=max(0.,heightLod-lod);"
+  "float hs=.5*(heightAt(uv+vec2(texel.x,0.),bias)-heightAt(uv-vec2(texel.x,0.),bias));"
+  "float ht=.5*(heightAt(uv+vec2(0.,texel.y),bias)-heightAt(uv-vec2(0.,texel.y),bias));"
   "n=normalize(g-bump*(hs*normalize(S)+ht*normalize(T)));}"
   "vec3 sum=vec3(0.);"
   "for(int i=0;i<4;i++){vec3 d=lightPos[i].xyz-P; float len=length(d)+0.001; vec3 l=d/len;"
@@ -353,6 +360,8 @@ void GL_InitPixelLighting(void)
  }
  pixel_sampler=uniform_location(pixel_light_program,"baseTexture");
  pixel_texel=uniform_location(pixel_light_program,"texel");
+ pixel_height_lod=uniform_location(pixel_light_program,"heightLod");
+ pixel_source_texel=uniform_location(pixel_light_program,"sourceTexel");
  pixel_bump_loc=uniform_location(pixel_light_program,"bump");
  pixel_lighting=ri.Cvar_Get("gl_pixel_lighting","0",CVAR_ARCHIVE);	/* 0 off, else number of lights (1..4) */
  pixel_bump=ri.Cvar_Get("gl_pixel_bump","1",CVAR_ARCHIVE);		/* 0 flat, 1 relief from the texture */
@@ -775,11 +784,25 @@ void GL_DrawPixelLight(void)
       (surface->texinfo->flags&(SURF_SKY|SURF_WARP|SURF_TRANS33|SURF_TRANS66|SURF_FLOWING))) continue;
   side=DotProduct(r_newrefdef.vieworg,surface->plane->normal)-surface->plane->dist;
   if ((side<0)!=((surface->flags&SURF_PLANEBACK)!=0)) continue;
-  image=R_TextureAnimation(surface->texinfo);
-  if (image!=bound) {	/* texel = one texel of the uploaded (possibly HD) image in texture coordinates */
+  /* R_DrawWorld's temporary currententity has gone out of scope. Use the
+     same explicit world frame as the base pass, never the stale pointer. */
+  image=R_TextureAnimationFrame(surface->texinfo,(int)(r_map_animation_time*2));
+  if (!image || image->width<=0 || image->height<=0) continue;
+  if (image!=bound) {
+   int width,height,logical_width,logical_height,lod=0;
    GL_Bind(image->texnum);
-   uniform2f(pixel_texel,1.0f/(image->upload_width>0?image->upload_width:image->width),
-    1.0f/(image->upload_height>0?image->upload_height:image->height));
+   width=image->upload_width>0?image->upload_width:image->width;
+   height=image->upload_height>0?image->upload_height:image->height;
+   uniform2f(pixel_source_texel,1.0f/width,1.0f/height);
+   logical_width=image->width<width?image->width:width;
+   logical_height=image->height<height?image->height:height;
+   while (width>logical_width || height>logical_height) {
+    if (width>1) width/=2;
+    if (height>1) height/=2;
+    lod++;
+   }
+   uniform2f(pixel_texel,1.0f/logical_width,1.0f/logical_height);
+   pixel_uniform1f(pixel_height_lod,(float)lod);
    bound=image;
   }
   sign=(surface->flags&SURF_PLANEBACK)?-1.0f:1.0f;
@@ -897,7 +920,7 @@ static void ReliefEnd(void)
 }
 
 /* org: the eye in the space of the surfaces; world: only surfaces marked visible this frame */
-static void ReliefSurfaces(msurface_t *surface,int count,const float *org,int world)
+static void ReliefSurfaces(msurface_t *surface,int count,const float *org,int world,int frame)
 {
  int i,j;
  float depth=gl_relief_depth->value;
@@ -914,7 +937,7 @@ static void ReliefSurfaces(msurface_t *surface,int count,const float *org,int wo
   side=DotProduct(org,surface->plane->normal)-surface->plane->dist;
   if ((side<0)!=((surface->flags&SURF_PLANEBACK)!=0)) continue;
   if (side>700 || side<-700) continue;	/* beyond the fade */
-  image=R_TextureAnimation(surface->texinfo);
+  image=R_TextureAnimationFrame(surface->texinfo,frame);
   if (!image || image->width<=0 || image->height<=0) continue;
   if (relief_first) {
    relief_first=0;
@@ -961,7 +984,7 @@ void GL_DrawRelief(void)
  relief_first=1; relief_lmbound=-1; relief_image=NULL;
  qglMatrixMode(GL_MODELVIEW);
  qglLoadMatrixf(r_world_matrix);
- ReliefSurfaces(r_worldmodel->surfaces,r_worldmodel->numsurfaces,r_newrefdef.vieworg,1);
+ ReliefSurfaces(r_worldmodel->surfaces,r_worldmodel->numsurfaces,r_newrefdef.vieworg,1,(int)(r_map_animation_time*2));
  ReliefEnd();
 }
 
@@ -997,7 +1020,7 @@ void GL_DrawReliefModels(void)
   e->angles[0]=-e->angles[0]; e->angles[2]=-e->angles[2];	/* as R_DrawBrushModel */
   R_RotateForEntity(e);
   e->angles[0]=-e->angles[0]; e->angles[2]=-e->angles[2];
-  ReliefSurfaces(&model->surfaces[model->firstmodelsurface],model->nummodelsurfaces,org,0);
+  ReliefSurfaces(&model->surfaces[model->firstmodelsurface],model->nummodelsurfaces,org,0,e->frame);
  }
  qglLoadMatrixf(r_world_matrix);
  ReliefEnd();

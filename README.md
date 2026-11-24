@@ -1,5 +1,14 @@
 # #Quake2ToTheMAX 1.0
 
+## 3.60i per-pixel surface stability - 24 November 2026
+
+- The owner isolated vibrating wall textures on q2dm1 to the per-pixel bump effect: `gl_relief 0` did not help; `gl_pixel_lighting 0` or `gl_pixel_bump 0` removed it.
+- Per-pixel surface normals now use a filtered height signal at the original material density and symmetric differences. High-resolution colour detail keeps its normal resolution/filtering. The height bias accounts for screen minification so larger material features remain visible at distance.
+- Modern world lighting and relief now select the same explicit animation frame as the base world pass. Brush relief uses that brush entity's frame. These passes no longer read the expired stack-local world entity or an unrelated last entity. q2dm1 has no animated texinfo; this is a separate source defect found during the audit.
+- Read-only structural checks covered all 31 installed PAKs and 90 original/simplified BSP files, including 2,642 DDS, 10,524 TGA, 6,754 WAL and 11,514 PCX headers. No checked header, mip-bound or PAK/BSP-bound error was found. Every drawn world texture has a replacement in each installed texture set; the 53 omitted HD entries are unused authoring/sky placeholders. This is not a visual playthrough of all maps.
+- Validation: C89/source checks, 237 executions of the parsed production animation selector, and compile/link/render tests of the actual lighting shader on RTX 5060. A synthetic noisy-material subpixel test reduced lighting variation by about 95.6% while retaining coarse relief; this is not an in-game result or an FPS measurement. Not built locally in Visual Studio 2005; the rebuilt game still needs the owner's q2dm1/MAX 4K test.
+- Shared ref_gl source covers both Release and Release_SSE. Legacy binary-only AMD/Rendition renderers retain their paths; modern lighting remains behind its existing CPU/driver gate. No PAK, EXE or DLL bytes changed. No protocol, collision, prediction or model/sound index changes.
+
 A Quake II engine project for retro and modern PCs, built on Quake II 3.21 and BDGN 3.28. Hardware-tuned performance presets, Software rendering and classic sprite modes share the project with optional HD/AI 4K graphics and modern OpenGL effects.
 
 **You need the original Quake II.** This repository contains engine source and build tools. Game data, runtime drivers, music, installers and texture/sound packs are distributed separately.

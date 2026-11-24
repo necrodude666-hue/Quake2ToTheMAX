@@ -355,6 +355,7 @@ extern int gl_pixel_model_skip;	/* lights left out of R_LightPoint for the model
 int GL_PixelLightModelMask(const entity_t *e,float radius);
 void GL_DrawPixelLightModel(const float (*xyz)[4],const float (*normal)[3],const int *order);
 image_t *R_TextureAnimation(mtexinfo_t *tex);
+image_t *R_TextureAnimationFrame(mtexinfo_t *tex, int frame);
 qboolean GL_ScaleBegin(const refdef_t *view, refdef_t *scaled_view, float ui_scale, const float *fog_color);
 qboolean GL_ScalePresent(const refdef_t *scaled_view, const refdef_t *view, float ui_scale);
 void GL_MBind( GLenum target, int texnum );
