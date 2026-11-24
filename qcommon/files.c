@@ -919,34 +919,46 @@ pack_t *FS_LoadPackFile (char *packfile)
 {
 	dpackheader_t	header;
 	int				i;
-	packfile_t		*newfiles;
+	packfile_t		*newfiles = NULL;
 	int				numpackfiles;
 	pack_t			*pack;
 	FILE			*packhandle;
-	dpackfile_t		*info;	// BDGN 3.51af: on the heap (was 4096 entries on the stack)
+	dpackfile_t		*info = NULL;	// BDGN 3.51af: on the heap (was 4096 entries on the stack)
 	unsigned		checksum;
+	long			packlength;
 
 	packhandle = fopen(packfile, "rb");
 	if (!packhandle)
 		return NULL;
 
-	fread (&header, 1, sizeof(header), packhandle);
+	/* 3.60i: R1Q2/Yamagi review. Validate the real file boundaries before
+	   allocating/using the directory; no extra package data is cached. */
+	if (fseek (packhandle, 0, SEEK_END) ||
+	    (packlength = ftell (packhandle)) < (long)sizeof(header) ||
+	    fseek (packhandle, 0, SEEK_SET) ||
+	    fread (&header, 1, sizeof(header), packhandle) != sizeof(header))
+		goto invalid_pack;
 	if (LittleLong(header.ident) != IDPAKHEADER)
-		Com_Error (ERR_FATAL, "%s is not a packfile", packfile);
+		goto invalid_pack;
 	header.dirofs = LittleLong (header.dirofs);
 	header.dirlen = LittleLong (header.dirlen);
+	if (header.dirofs < (int)sizeof(header) || header.dirlen < 0 ||
+	    header.dirofs > packlength || header.dirlen > packlength-header.dirofs ||
+	    header.dirlen % sizeof(dpackfile_t))
+		goto invalid_pack;
 
 	numpackfiles = header.dirlen / sizeof(dpackfile_t);
 
 	/* BDGN 3.51af: limit raised from 4096 (MAX_FILES_IN_PACK) to 65536; the directory is read into heap memory */
 	if (numpackfiles < 0 || numpackfiles > BDGN_MAX_FILES_IN_PACK)
-		Com_Error (ERR_FATAL, "%s has %i files", packfile, numpackfiles);
+		goto invalid_pack;
 
 	newfiles = Z_Malloc (numpackfiles * sizeof(packfile_t));
 	info = Z_Malloc (numpackfiles * sizeof(dpackfile_t) + 1);
 
-	fseek (packhandle, header.dirofs, SEEK_SET);
-	fread (info, 1, numpackfiles * sizeof(dpackfile_t), packhandle);
+	if (fseek (packhandle, header.dirofs, SEEK_SET) ||
+	    fread (info, 1, header.dirlen, packhandle) != (size_t)header.dirlen)
+		goto invalid_pack;
 
 // crc the directory to check for modifications
 	checksum = Com_BlockChecksum ((void *)info, numpackfiles * sizeof(dpackfile_t));
@@ -955,18 +967,25 @@ pack_t *FS_LoadPackFile (char *packfile)
 	if (checksum != PAK0_CHECKSUM)
 	{
 		Z_Free (info);
+		Z_Free (newfiles);
+		fclose (packhandle);
 		return NULL;
 	}
 #endif
 // parse the directory
 	for (i=0 ; i<numpackfiles ; i++)
 	{
+		int filepos = LittleLong(info[i].filepos);
+		int filelen = LittleLong(info[i].filelen);
+		if (filepos < 0 || filelen < 0 || filepos > packlength ||
+		    filelen > packlength-filepos)
+			goto invalid_pack;
 		/* BDGN 3.51ar: the 56-byte name need not end with a 0 (malformed PAK); id's strcpy then ran into the next
 		   entries and past the 64-byte packfile_t name */
 		memcpy (newfiles[i].name, info[i].name, sizeof(info[i].name));
 		newfiles[i].name[sizeof(info[i].name)] = 0;
-		newfiles[i].filepos = LittleLong(info[i].filepos);
-		newfiles[i].filelen = LittleLong(info[i].filelen);
+		newfiles[i].filepos = filepos;
+		newfiles[i].filelen = filelen;
 	}
 	Z_Free (info);
 
@@ -983,6 +1002,13 @@ pack_t *FS_LoadPackFile (char *packfile)
 	
 	Com_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
 	return pack;
+
+invalid_pack:
+	if (info) Z_Free (info);
+	if (newfiles) Z_Free (newfiles);
+	fclose (packhandle);
+	Com_Error (ERR_FATAL, "%s has invalid or truncated PAK data", packfile);
+	return NULL;
 }
 
 

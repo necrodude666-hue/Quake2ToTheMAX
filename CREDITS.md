@@ -25,3 +25,12 @@ Did we forget you? Tell us and you go on this list.
 Brain Drain: [website](https://braindrainlan.com/),
 [YouTube](https://www.youtube.com/channel/UCepdDpsXhGYvhMJjzLn0cWg),
 [Facebook](https://www.facebook.com/braindrainlan).
+
+## Robustness source review
+
+Thanks to R1CH and the R1Q2 contributors, Echon and the EGL contributors, the Yamagi Quake II team and the Q2PRO contributors. Their public source informed the 3.60i review of message parsing, buffer/PAK bounds and renderer architecture. BDGN retains its own classic-compatible implementation and the original GPL notices.
+
+- [R1Q2 source archive](https://github.com/tastyspleen/r1q2-archive)
+- [EGL source archive](https://github.com/Paril/egl)
+- [Yamagi Quake II](https://github.com/yquake2/yquake2)
+- [Q2PRO](https://github.com/q2pro/q2pro)

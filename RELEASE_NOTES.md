@@ -1,5 +1,16 @@
 # #Quake2ToTheMAX 1.0
 
+## 3.60i robustness review and rail impact smoke - 24 November 2026
+
+- Protocol-34 packets with incomplete headers are rejected before channel acknowledgements change. Valid client/server packet layouts and resource limits are retained.
+- Network strings preserve high-bit text bytes and consume the complete field when the 2048-byte local result is truncated, keeping the next field aligned.
+- Size buffers reject negative/overflowing reservations. Text append now removes its old terminator before reserving space, avoiding a write before the buffer after an allowed overflow.
+- PAK loading checks header/directory reads, directory alignment, file boundaries and entry offsets/lengths, and releases temporary resources on rejection. The 65,536-entry limit and existing search order remain.
+- The modern rail wall-impact cloud has 12 puffs instead of 4, at five times the previous linear size. Expansion remains one second and fade-out two seconds. Existing smoke controls, driver/CPU gates, presets, benchmarks and the bounded effect pool apply; no new assets are required.
+- Reviewed R1Q2, EGL, Yamagi and Q2PRO source. BDGN already has renderer batching/state caching and several server protections; this update adds focused checks without importing a new renderer, protocol extensions or movement rules.
+- Validation: 86 message/buffer/header cases, including unchanged channel results for valid packets; the old text-append underwrite is reproduced and the corrected path stays within bounds. Boundary checks accept all 31 installed PAKs and their 39,690 entries. Changed functions pass C89 declaration/syntax checks.
+- Build Release | Win32 and Release_SSE | Win32 with Visual Studio 2005 to apply the source update.
+
 ## 3.60i camera-step update - 24 November 2026
 
 - Stair smoothing now measures each movement command's own vertical rise. Server platform movement is no longer mistaken for a new stair when rendering between fixed physics ticks.
@@ -59,8 +70,8 @@ Source code: this repository (GPL v2). Credits: CREDITS.md.
 
 ## 3.60i corrective source update - 23 November 2026
 
-- Railgun impact coordinates are no longer changed by the beam effect. A black burn mark is followed by four
-  overlapping, denser impact smoke puffs when marks and modern smoke are enabled. The cloud starts after the core,
+- Railgun impact coordinates are no longer changed by the beam effect. A black burn mark is followed by twelve
+  overlapping, larger impact smoke puffs when marks and modern smoke are enabled. The cloud starts after the core,
   grows for one second and fades for two seconds, using the installed effect textures.
 - Modern wall relief and per-pixel light overlays use a biased less-or-equal depth test instead of exact depth
   equality. Relief height sampling has uniform control flow, filtered heights and finer ray steps to reduce motion

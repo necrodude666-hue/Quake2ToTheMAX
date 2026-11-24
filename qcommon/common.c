@@ -873,12 +873,15 @@ char *MSG_ReadString (sizebuf_t *msg_read)
 	l = 0;
 	do
 	{
-		c = MSG_ReadChar (msg_read);
+		/* 3.60i: unsigned text bytes; 0xff is not the end-of-message sentinel.
+		   Consume the whole field even when the local string is truncated
+		   (EGL/Q2PRO review), keeping the next protocol-34 field aligned. */
+		c = MSG_ReadByte (msg_read);
 		if (c == -1 || c == 0)
 			break;
-		string[l] = c;
-		l++;
-	} while (l < sizeof(string)-1);
+		if (l < sizeof(string)-1)
+			string[l++] = c;
+	} while (1);
 	
 	string[l] = 0;
 	
@@ -893,12 +896,12 @@ char *MSG_ReadStringLine (sizebuf_t *msg_read)
 	l = 0;
 	do
 	{
-		c = MSG_ReadChar (msg_read);
+		c = MSG_ReadByte (msg_read);
 		if (c == -1 || c == 0 || c == '\n')
 			break;
-		string[l] = c;
-		l++;
-	} while (l < sizeof(string)-1);
+		if (l < sizeof(string)-1)
+			string[l++] = c;
+	} while (1);
 	
 	string[l] = 0;
 	
@@ -994,7 +997,11 @@ void *SZ_GetSpace (sizebuf_t *buf, int length)
 {
 	void	*data;
 	
-	if (buf->cursize + length > buf->maxsize)
+	/* 3.60i: check signed lengths before adding them (Q2PRO review). */
+	if (length < 0 || buf->cursize < 0 || buf->maxsize < 0 ||
+	    buf->cursize > buf->maxsize)
+		Com_Error (ERR_FATAL, "SZ_GetSpace: invalid buffer length");
+	if (length > buf->maxsize - buf->cursize)
 	{
 		if (!buf->allowoverflow)
 			Com_Error (ERR_FATAL, "SZ_GetSpace: overflow without allowoverflow set");
@@ -1024,15 +1031,12 @@ void SZ_Print (sizebuf_t *buf, char *data)
 	
 	len = strlen(data)+1;
 
-	if (buf->cursize)
-	{
-		if (buf->data[buf->cursize-1])
-			memcpy ((byte *)SZ_GetSpace(buf, len),data,len); // no trailing 0
-		else
-			memcpy ((byte *)SZ_GetSpace(buf, len-1)-1,data,len); // write over trailing 0
-	}
-	else
-		memcpy ((byte *)SZ_GetSpace(buf, len),data,len);
+	/* Remove the old terminator before reserving the new text. Subtracting
+	   from the returned pointer after an allowed overflow wrote before data. */
+	if (buf->cursize > 0 && buf->cursize <= buf->maxsize &&
+	    !buf->data[buf->cursize-1])
+		buf->cursize--;
+	memcpy (SZ_GetSpace(buf, len), data, len);
 }
 
 

@@ -301,6 +301,11 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 	unsigned	reliable_ack, reliable_message;
 	int			qport;
 
+	/* 3.60i: discard incomplete protocol-34 headers before interpreting
+	   missing sequence bytes as -1 or changing acknowledgement state. */
+	if (msg->cursize < (chan->sock == NS_SERVER ? 10 : 8))
+		return false;
+
 // get sequence numbers		
 	MSG_BeginReading (msg);
 	sequence = MSG_ReadLong (msg);

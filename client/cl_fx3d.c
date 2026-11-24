@@ -564,7 +564,8 @@ void CL_FX3D_HitSmoke(vec3_t pos, vec3_t dir, int delay, qboolean hyper_hit)
 
 /* 3.60i hotfix: a dense impact cloud, using the blaster/hyperblaster smoke
    assets already selected by the effect texture menu. No extra asset loads.
-   Starts just after the rail core, grows for one second, fades for two. */
+   Starts just after the rail core, grows for one second, fades for two.
+   Owner's 3.60i update: twelve puffs (3x), five times the linear size. */
 void CL_FX3D_RailImpactSmoke(vec3_t pos, vec3_t dir)
 {
  vec3_t n,side,org;
@@ -574,15 +575,15 @@ void CL_FX3D_RailImpactSmoke(vec3_t pos, vec3_t dir)
  if (!VectorNormalize(n)) VectorSet(n,0,0,1);
  PerpendicularVector(side,n);
  model=fx3d_model[M_HYPER_SMOKE]?M_HYPER_SMOKE:M_BLASTER_SMOKE;
- for (i=0;i<4;i++) {
+ for (i=0;i<12;i++) {
   fx3d_t *f;
-  VectorMA(pos,8.0f+i*1.5f,n,org);
-  VectorMA(org,(i-1.5f)*3.0f,side,org);
-  f=FX_Anim(model,org,NULL,RF_PUFFS,701+i*60,
-    (re_frames_hint(model)-1)/3.0f,0.88f-i*0.06f);
+  VectorMA(pos,8.0f+(i%4)*1.5f,n,org);
+  VectorMA(org,(i-5.5f)*3.0f,side,org);
+  f=FX_Anim(model,org,NULL,RF_PUFFS,701+i*20,
+    (re_frames_hint(model)-1)/3.0f,0.88f-(i%4)*0.06f);
   if (f) {
    f->life=3000; f->grow=1000; f->fadein=120; f->fadeout=2000;
-   f->scale0=0.35f; f->scale1=1.8f;
+   f->scale0=1.75f; f->scale1=9.0f;
   }
  }
 }
