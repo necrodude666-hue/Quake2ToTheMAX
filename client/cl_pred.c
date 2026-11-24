@@ -215,7 +215,6 @@ void CL_PredictMovement (void)
 {
 	int			ack, current;
 	int			frame;
-	int			oldframe;
 	usercmd_t	*cmd;
 	pmove_t		pm;
 	int			i;
@@ -267,21 +266,21 @@ void CL_PredictMovement (void)
 		cmd = &cl.cmds[frame];
 
 		pm.cmd = *cmd;
+		oldz = pm.s.origin[2];
 		Pmove (&pm);
+		/* Measure a step inside the command that actually moved us. Between
+		   fixed-physics ticks there may be no sent command to replay: comparing
+		   server state with an older history slot then mistakes a platform's
+		   height change for a stair and starts a false camera offset. */
+		CL_RecordPredictedStep (ack, pm.s.origin[2] - oldz, pm.s.pm_flags);
 
 		// save for debug checking
 		VectorCopy (pm.s.origin, cl.predicted_origins[frame]);
 	}
 
 
-	// BDGN 3.51ar: a step is measured over the newest sent command, once per sent command. In id's code that is
-	// every frame; with cl_maxpackets the held frames would measure the same step again and restart the smoothing.
-	oldframe = (ack-2) & (CMD_BACKUP-1);
-	oldz = cl.predicted_origins[oldframe][2];
-	CL_RecordPredictedStep (current - 1, pm.s.origin[2] - oldz, pm.s.pm_flags);
-
-	// BDGN 3.51ar: cl_maxpackets holds this frame's command (not sent yet): predict it with the whole waiting time (after the step check,
-	// so movement and mouse look change every rendered frame, not only when a packet goes out)
+	// Predict the held command too, so movement and mouse look change every
+	// rendered frame. Its step is measured separately from server corrections.
 	if (cl.packetwait.pending || cl_async_pending)	/* 3.58q: also the provisional move of fixed physics */
 	{
 		oldz = pm.s.origin[2];

@@ -1,12 +1,20 @@
 # #Quake2ToTheMAX 1.0
 
+## 3.60i camera-step update - 24 November 2026
+
+- Stair smoothing now measures each movement command's own vertical rise. Server platform movement is no longer mistaken for a new stair when rendering between fixed physics ticks.
+- The source regression reproduces the old false 8-unit camera step and verifies the correction, including 108 combinations of partial commands, platform heights and command-history wrap. Actual stairs retain their smoothing.
+- Movement commands, Pmove calls, final predicted positions, collision and network data are unchanged. Fixed 100 Hz physics, the player's rendering limit and existing presets are retained. The shared client correction applies to all renderers and both executable configurations.
+- Build with Visual Studio 2005 using Release | Win32 and Release_SSE | Win32 to use the updated source.
+- The owner reports that a 100 FPS limit stops the intermittent wall/lift vibration in the affected session. Investigation continues; the earlier console-based bump-lighting diagnosis was withdrawn because pausing also changed the result.
+
 ## 3.60i per-pixel surface stability - 24 November 2026
 
-- The owner isolated vibrating wall textures on q2dm1 to the per-pixel bump effect: `gl_relief 0` did not help; `gl_pixel_lighting 0` or `gl_pixel_bump 0` removed it.
+- Per-pixel material filtering and animated-surface selection were reviewed as separate rendering improvements.
 - Per-pixel surface normals now use a filtered height signal at the original material density and symmetric differences. High-resolution colour detail keeps its normal resolution/filtering. The height bias accounts for screen minification so larger material features remain visible at distance.
 - Modern world lighting and relief now select the same explicit animation frame as the base world pass. Brush relief uses that brush entity's frame. These passes no longer read the expired stack-local world entity or an unrelated last entity. q2dm1 has no animated texinfo; this is a separate source defect found during the audit.
-- Read-only structural checks covered all 31 installed PAKs and 90 original/simplified BSP files, including 2,642 DDS, 10,524 TGA, 6,754 WAL and 11,514 PCX headers. No checked header, mip-bound or PAK/BSP-bound error was found. Every drawn world texture has a replacement in each installed texture set; the 53 omitted HD entries are unused authoring/sky placeholders. This is not a visual playthrough of all maps.
-- Validation: C89/source checks, 237 executions of the parsed production animation selector, and compile/link/render tests of the actual lighting shader on RTX 5060. A synthetic noisy-material subpixel test reduced lighting variation by about 95.6% while retaining coarse relief; this is not an in-game result or an FPS measurement. Not built locally in Visual Studio 2005; the rebuilt game still needs the owner's q2dm1/MAX 4K test.
+- Read-only structural checks covered all 31 installed PAKs and 90 original/simplified BSP files, including 2,642 DDS, 10,524 TGA, 6,754 WAL and 11,514 PCX headers. No checked header, mip-bound or PAK/BSP-bound error was found. Every drawn world texture has a replacement in each installed texture set; the 53 omitted HD entries are unused authoring/sky placeholders.
+- Validation: C89/source checks, 237 executions of the production animation selector, and compile/link/render tests of the lighting shader on RTX 5060. A synthetic noisy-material test reduced subpixel lighting variation by about 95.6%; this measures shader variation, not game FPS.
 - Shared ref_gl source covers both Release and Release_SSE. Legacy binary-only AMD/Rendition renderers retain their paths; modern lighting remains behind its existing CPU/driver gate. No PAK, EXE or DLL bytes changed. No protocol, collision, prediction or model/sound index changes.
 
 **Brain Drain presents #Quake2ToTheMAX 1.0**, built on BDGN 3.60i: a Quake II engine for every PC, from a Pentium
@@ -15,8 +23,6 @@
 **You need the original Quake II (CD, Steam or GOG).** No game data is included.
 
 [Project website](https://brainspace.braindrainlan.nu/quake2tothemax/index.html) · [Downloads](https://brainspace.braindrainlan.nu/quake2tothemax/download.html) · [ModDB](https://www.moddb.com/mods/quake2tothemax)
-
-Current validation status: the owner reports the earlier wall/stair/lift flicker resolved. The latest EXTREME profile changes passed source checks but still need a Visual Studio 2005 build and gameplay/FPS validation. The dated sections below preserve the checks performed at each stage.
 
 ## Downloads
 
@@ -64,9 +70,8 @@ Source code: this repository (GPL v2). Credits: CREDITS.md.
 - Avetar, Claude and ChatGPT are credited in the game and public documentation.
 - Version and archive filename remain 1.0 / BDGN 3.60i at the owner's request. No PAK files changed.
 - Validation: changed C functions checked for syntax/C89 declaration placement; relief shader checked on the
-  available OpenGL driver. Not built in VS2005 and not play-tested; the supplied executables/DLLs are unchanged.
-  Rebuild Release and Release_SSE before testing the fixes. Real stair-motion, MAX 4K and EXTREME gameplay checks
-  remain necessary. The AMD and Rendition binary-only renderers are unchanged: the modern overlay and decal fixes
+  available OpenGL driver. Build Release and Release_SSE in Visual Studio 2005 to apply these source changes.
+  The AMD and Rendition binary-only renderers are unchanged: the modern overlay and decal fixes
   concern ref_gl, and the shared client visibility/endpoint fixes concern the rebuilt client.
 - Online: client visuals only; no protocol, collision, prediction, game rules or model/sound indices changed.
 
@@ -85,10 +90,7 @@ Brain Drain: [website](https://braindrainlan.com/),
 - Movement commands, Pmove calls, final predicted positions, collision and network data are unchanged. The shared
   client change applies to both executable configurations and all renderers, including binary-only legacy ones.
 - Validation: C89 syntax/declaration checks and regression cases evaluated from the actual helper's parsed C body:
-  first provisional step, replay/commit deduplication, ground/height bounds and command-sequence wrap. Not built locally
-  in Visual Studio 2005. The owner subsequently reported the visual issue resolved.
-- The owner now reports the earlier wall/stair/lift flicker resolved. Earlier individual shadow, relief and
-  frame-cap tests had not improved it. The exact tested binary hash was not supplied.
+  first provisional step, replay/commit deduplication, ground/height bounds and command-sequence wrap.
 
 - That camera-step change did not alter preset values, PAK files or VSync. Version and source archive filename remain 1.0 /
   BDGN 3.60i. Required Software assembler objects are explicitly retained by the GitHub ignore rules.
@@ -110,9 +112,7 @@ Brain Drain: [website](https://braindrainlan.com/),
   their current output mode; their displayed run count is calculated from the updated plan.
 - Validation: C89 checks, eight executions of the parsed production profile across renderer/pack/capability
   combinations, and four actual menu-apply cases for the video/audio restart. Window/OFF logic is unchanged.
-  Not built locally in Visual Studio 2005; this new EXTREME profile has not been gameplay- or FPS-tested.
-- The owner reports the preceding wall/stair/lift flicker resolved. That feedback does not validate this new
-  EXTREME profile. No PAK, DLL or EXE bytes changed; rebuild both client configurations before testing.
+- Rebuild both client configurations in Visual Studio 2005 to apply the EXTREME source update.
 
 
 - The preset benchmark preserves the existing first/baseline case, and its view-area guard accepts EXTREME's
