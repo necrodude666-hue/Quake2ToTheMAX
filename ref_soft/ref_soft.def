@@ -1,0 +1,4 @@
+EXPORTS
+	GetRefAPI
+	SWimp_MenuBegin
+	SWimp_MenuEnd

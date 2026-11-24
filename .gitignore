@@ -1,0 +1,54 @@
+# Visual Studio 2005 build output
+Release/
+Release_SSE/
+Debug/
+*.obj
+*.pch
+*.pdb
+*.idb
+*.ilk
+*.ncb
+*.suo
+*.user
+*.aps
+*.res
+*.exp
+*.lib
+*.map
+*.bsc
+*.sbr
+BuildLog.htm
+
+# Release files (published as GitHub release assets, not in the repository: GitHub's 100 MB limit)
+*.pak
+Quake2ToTheMAX_*_Setup.exe
+Q2TTM_*.zip
+Q2TTM_zip/
+SHA256SUMS.txt
+_extra/installer/patch320/
+
+# Game data and user files
+baseq2/save/
+baseq2/scrnshot/
+config.cfg
+*.dm2
+*.log
+bdgn_crash.txt
+bdgn_startup.txt
+bdgn_mapload.txt
+bdgn_history.txt
+
+# Editors and tools
+*.bak
+*~
+__pycache__/
+*.pyc
+Thumbs.db
+
+# Required prebuilt assembly linker inputs (not generated build leftovers).
+!ref_soft/asm/*.obj
+# Preserve the DirectDraw compatibility license, including on case-insensitive systems.
+!ref_soft/win32/ddraw_compat/COPYING.LIB
+# Runtime data and third-party game drivers belong in separate downloads.
+/Quake2/
+/obj/

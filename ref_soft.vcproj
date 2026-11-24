@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject ProjectType="Visual C++" Version="8.00" Name="ref_soft" ProjectGUID="{72C89471-3322-46F0-A0F6-860D33882896}" RootNamespace="ref_soft" Keyword="Win32Proj">
+  <Platforms>
+    <Platform Name="Win32" />
+  </Platforms>
+  <Configurations>
+    <Configuration Name="Release|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)" IntermediateDirectory="$(SolutionDir)obj\ref_soft\$(ConfigurationName)" ConfigurationType="2" CharacterSet="2" WholeProgramOptimization="1">
+      <Tool Name="VCCLCompilerTool" Optimization="2" PreprocessorDefinitions="WIN32;_WINDOWS;C_ONLY;SW_ID386_SPANS;SW_ID386_SURF;SW_ID386_EDGE;SW_ID386_MODELS;SW_ID386_WATER;SW_ID386_CLIP;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_USE_32BIT_TIME_T;NDEBUG" RuntimeLibrary="0" UsePrecompiledHeader="0" WarningLevel="3" DebugInformationFormat="3" CompileAs="1" InlineFunctionExpansion="2" EnableIntrinsicFunctions="true" FavorSizeOrSpeed="1" OmitFramePointers="true" BufferSecurityCheck="false" StringPooling="true" FloatingPointModel="2" EnableEnhancedInstructionSet="0"/>
+      <Tool Name="VCResourceCompilerTool" AdditionalIncludeDirectories="win32" PreprocessorDefinitions="WIN32;NDEBUG" />
+      <Tool Name="VCLinkerTool" ProgramDatabaseFile="$(IntDir)\$(TargetName).pdb" ImportLibrary="$(IntDir)\$(TargetName).lib" GenerateMapFile="true" MapFileName="$(IntDir)\$(TargetName).map" AdditionalDependencies="kernel32.lib user32.lib gdi32.lib winmm.lib ref_soft\asm\r_draw16.obj ref_soft\asm\r_asmvars.obj ref_soft\asm\r_surf8.obj ref_soft\asm\r_edgea.obj ref_soft\asm\r_polysa.obj ref_soft\asm\r_scana.obj ref_soft\asm\r_drawa.obj" OutputFile="$(OutDir)\ref_soft.dll" ModuleDefinitionFile="ref_soft\ref_soft.def" LinkIncremental="1" GenerateDebugInformation="true" SubSystem="2" TargetMachine="1" OptimizeReferences="2" EnableCOMDATFolding="2" OptimizeForWindows98="2"/>
+      <Tool Name="VCManifestTool" />
+      <Tool Name="VCPostBuildEventTool" Description="BDGN: Windows 95 import fix (tools\win95fix)" CommandLine="&quot;$(SolutionDir)tools\win95fix\win95fix.exe&quot; &quot;$(TargetPath)&quot;" />
+    </Configuration>
+    <Configuration Name="Release_SSE|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)" IntermediateDirectory="$(SolutionDir)obj\ref_soft\$(ConfigurationName)" ConfigurationType="2" CharacterSet="2" WholeProgramOptimization="1">
+      <Tool Name="VCCLCompilerTool" Optimization="2" PreprocessorDefinitions="WIN32;_WINDOWS;C_ONLY;SW_ID386_SPANS;SW_ID386_SURF;SW_ID386_EDGE;SW_ID386_MODELS;SW_ID386_WATER;SW_ID386_CLIP;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_USE_32BIT_TIME_T;NDEBUG" RuntimeLibrary="0" UsePrecompiledHeader="0" WarningLevel="3" DebugInformationFormat="3" CompileAs="1" InlineFunctionExpansion="2" EnableIntrinsicFunctions="true" FavorSizeOrSpeed="1" OmitFramePointers="true" BufferSecurityCheck="false" StringPooling="true" FloatingPointModel="2" EnableEnhancedInstructionSet="1"/>
+      <Tool Name="VCResourceCompilerTool" AdditionalIncludeDirectories="win32" PreprocessorDefinitions="WIN32;NDEBUG" />
+      <Tool Name="VCLinkerTool" ProgramDatabaseFile="$(IntDir)\$(TargetName).pdb" ImportLibrary="$(IntDir)\$(TargetName).lib" GenerateMapFile="true" MapFileName="$(IntDir)\$(TargetName).map" AdditionalDependencies="kernel32.lib user32.lib gdi32.lib winmm.lib ref_soft\asm\r_draw16.obj ref_soft\asm\r_asmvars.obj ref_soft\asm\r_surf8.obj ref_soft\asm\r_edgea.obj ref_soft\asm\r_polysa.obj ref_soft\asm\r_scana.obj ref_soft\asm\r_drawa.obj" OutputFile="$(OutDir)\ref_softsse.dll" ModuleDefinitionFile="ref_soft\ref_soft.def" LinkIncremental="1" GenerateDebugInformation="true" SubSystem="2" TargetMachine="1" OptimizeReferences="2" EnableCOMDATFolding="2" OptimizeForWindows98="2"/>
+      <Tool Name="VCManifestTool" />
+      <Tool Name="VCPostBuildEventTool" Description="BDGN: Windows 95 import fix (tools\win95fix)" CommandLine="&quot;$(SolutionDir)tools\win95fix\win95fix.exe&quot; &quot;$(TargetPath)&quot;" />
+    </Configuration>
+  </Configurations>
+  <Files>
+    <File RelativePath="game\q_shared.c" />
+    <File RelativePath="ref_soft\win32\q_shwin.c" />
+    <File RelativePath="ref_soft\r_aclip.c" />
+    <File RelativePath="ref_soft\r_alias.c" />
+    <File RelativePath="ref_soft\r_bsp.c" />
+    <File RelativePath="ref_soft\r_draw.c" />
+    <File RelativePath="ref_soft\r_edge.c" />
+    <File RelativePath="ref_soft\r_image.c" />
+    <File RelativePath="ref_soft\r_light.c" />
+    <File RelativePath="ref_soft\r_main.c" />
+    <File RelativePath="ref_soft\r_misc.c" />
+    <File RelativePath="ref_soft\r_model.c" />
+    <File RelativePath="ref_soft\r_part.c" />
+    <File RelativePath="ref_soft\r_poly.c" />
+    <File RelativePath="ref_soft\r_polyse.c" />
+    <File RelativePath="ref_soft\r_rast.c" />
+    <File RelativePath="ref_soft\r_scan.c" />
+    <File RelativePath="ref_soft\r_sprite.c" />
+    <File RelativePath="ref_soft\r_surf.c" />
+    <File RelativePath="ref_soft\r_smp.c" />
+    <File RelativePath="ref_soft\win32\rw_ddraw.c" />
+    <File RelativePath="ref_soft\win32\rw_dib.c" />
+    <File RelativePath="ref_soft\win32\rw_imp.c" />
+    <File RelativePath="ref_soft\adivtab.h" />
+    <File RelativePath="ref_soft\anorms.h" />
+    <File RelativePath="game\q_shared.h" />
+    <File RelativePath="qcommon\qcommon.h" />
+    <File RelativePath="qcommon\qfiles.h" />
+    <File RelativePath="ref_soft\r_local.h" />
+    <File RelativePath="ref_soft\r_model.h" />
+    <File RelativePath="ref_soft\rand1k.h" />
+    <File RelativePath="client\ref.h" />
+    <File RelativePath="ref_soft\win32\rw_win.h" />
+    <File RelativePath="ref_soft\win32\winquake.h" />
+    <File RelativePath="ref_soft\ref_soft.def" />
+  <File RelativePath="ref_soft\r_bdgn.c" />
+<File RelativePath="ref_soft\r_bdgn.h" />
+<File RelativePath="ref_soft\sw_blit.h" />
+<File RelativePath="ref_soft\sw_fastpath.h" />
+<File RelativePath="ref_soft\sw_texfilter.h" />
+<File RelativePath="ref_soft\asm\README.txt" />
+<File RelativePath="ref_gl\weapon_colors.h" />
+<File RelativePath="ref_soft\win32\ddraw_compat\ddraw.h" />
+<File RelativePath="ref_soft\win32\ddraw_compat\_mingw_dxhelper.h" />
+    <File RelativePath="ref_soft\qasm.inc" />
+    <File RelativePath="ref_soft\d_if.inc" />
+</Files>
+  <Globals />
+</VisualStudioProject>

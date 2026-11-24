@@ -1,0 +1,94 @@
+# #Quake2ToTheMAX 1.0
+
+A Quake II engine project for retro and modern PCs, built on Quake II 3.21 and BDGN 3.28. Hardware-tuned performance presets, Software rendering and classic sprite modes share the project with optional HD/AI 4K graphics and modern OpenGL effects.
+
+**You need the original Quake II.** This repository contains engine source and build tools. Game data, runtime drivers, music, installers and texture/sound packs are distributed separately.
+
+[Project website](https://brainspace.braindrainlan.nu/quake2tothemax/index.html) · [Downloads and optional packs](https://brainspace.braindrainlan.nu/quake2tothemax/download.html) · [ModDB](https://www.moddb.com/mods/quake2tothemax)
+
+## Current status
+
+Public version 1.0 uses internal BDGN 3.60i. The corrective source update of 23 November 2026 addresses rail impact coordinates/smoke, pickup sprite visibility, modern wall-overlay/relief stability and camera step smoothing. The owner reports that the wall/stair/lift flicker is resolved; the exact tested binary hash was not supplied. Changed C functions passed source-level syntax/C89 checks, and the relief shader compiled and linked on the available RTX 5060 driver. **The latest EXTREME profile changes still require a Visual Studio 2005 build and gameplay/FPS validation.** Historical benchmarks do not validate that new profile.
+
+## Features
+
+- Software rendering, low-memory presets, smaller texture/sound sets, reduced models and classic 2D enemies/weapons.
+- Fast, Faster, Ultra Fast and PSYCHO Fast presets for hardware families, plus a three-run in-game preset benchmark.
+- Doom, Wolfenstein and Build-inspired presentation modes.
+- Retained legacy renderer paths and supported MMX/3DNow!/SSE detection; Software SMP/audio-worker options and mtgl32 OpenGL integration.
+- Optional HD, enhanced, AI Stable Diffusion and AI 4K texture packs, with driver-gated lighting, relief, water, post-processing and weapon effects.
+- MP3/WAV/MIDI/CD music, Windows MIDI output selection and alternate effect modes.
+- Saved settings, widescreen FOV, raw mouse input where available, console/history, chat filtering and demo controls.
+
+Pentium 133 with 32 MB RAM is the minimum design target. The generic client targets Windows 95 OSR2 through Windows 11; individual renderers and features have narrower requirements. The separate SSE client requires an SSE-capable CPU and does not run on Windows 95. Not every hardware/OS/driver combination has been validated. Original protocol-34 online compatibility is a project requirement.
+
+## Build the engine
+
+Use **Visual Studio 2005**, `quake2.sln`, **Win32**. Keep the supplied project structure and compatibility post-build step.
+
+| Configuration | Outputs |
+|---|---|
+| Release | `Release/quake2.exe`, `ref_gl.dll`, `ref_soft.dll`, `baseq2/gamex86.dll` |
+| Release_SSE | `Release_SSE/Quake2SSE.exe`, `ref_glsse.dll`, `ref_softsse.dll`, `baseq2/gamex86sse.dll` |
+
+The seven prebuilt `ref_soft/asm/*.obj` files are intentional linker inputs. Their assembly source and provenance are in the same folder. They must be included when cloning or committing; the repository ignore rules explicitly retain them. `tools/win95fix` contains the compatibility helper and its source. Installer helper executables likewise have their C source under `_extra/installer/tools`.
+
+Copy rebuilt outputs into a complete project runtime installation. This source-only checkout omits `Quake2/`, the optional packs and id's point-release data. To build the installer, restore those separately supplied inputs at the paths documented in `_extra/installer/README.txt`, build both configurations and run the existing installer scripts. Merely cloning this repository does not provide the complete installer inputs.
+
+## Test this correction
+
+1. Walk up and down stairs in MAX 4K and inspect wall relief for flicker.
+2. Fire the railgun at a wall with marks and modern smoke enabled; verify the dark impact and smoke.
+3. Check weapons, ammunition, armour, powerups, keys, other items and enemies in Default and fastest preset (EXTREME).
+4. Check saved settings across a restart and repeat basic play on the intended legacy and modern systems before updating the installer.
+
+See [CHANGELOG.md](CHANGELOG.md) for changes and [CREDITS.md](CREDITS.md) for attribution. Report the version, CPU/RAM/GPU, Windows, renderer/driver, preset, resolution, map and reproduction steps with each bug.
+
+## License and credits
+
+Engine source is under [GPL v2](LICENSE), retaining original notices. Third-party components and game-derived artwork have their own terms. This is an independent project; original Quake II is required.
+
+Brain Drain / JizzMasta; based on id Software's Quake II and BDGN by Nitton Åttiofyra. Contributors include **Avetar**. **Claude and ChatGPT** provided extensive AI development assistance. Full original, port, renderer, driver and tester credits are in [CREDITS.md](CREDITS.md).
+
+[Brain Drain](https://braindrainlan.com/) · [YouTube](https://www.youtube.com/channel/UCepdDpsXhGYvhMJjzLn0cWg) · [Facebook](https://www.facebook.com/braindrainlan)
+
+## 3.60i follow-up - provisional stair movement
+
+- Camera step smoothing now starts when an unsent/provisional movement command first climbs a step. It records
+  the actual command sequence and rejects replays/older steps, so committing that same command does not restart
+  the 100 ms smoothing. This corrects a source-level vertical-pop path with fixed physics/packet throttling.
+- Movement commands, Pmove calls, final predicted positions, collision and network data are unchanged. The shared
+  client change applies to both executable configurations and all renderers, including binary-only legacy ones.
+- Validation: C89 syntax/declaration checks and regression cases evaluated from the actual helper's parsed C body:
+  first provisional step, replay/commit deduplication, ground/height bounds and command-sequence wrap. Not built locally
+  in Visual Studio 2005. The owner subsequently reported the visual issue resolved.
+- The owner now reports the earlier wall/stair/lift flicker resolved. Earlier individual shadow, relief and
+  frame-cap tests had not improved it. The exact tested binary hash was not supplied.
+
+- That camera-step change did not alter preset values, PAK files or VSync. Version and source archive filename remain 1.0 /
+  BDGN 3.60i. Required Software assembler objects are explicitly retained by the GitHub ignore rules.
+
+
+## 3.60i EXTREME profile update - 23 November 2026
+
+- The EXTREME toggle uses the owner's config as the graphics/audio reference: classic low-end sprites, front/back
+  enemy views at 6.25 fps, slower far animation, static 2D view weapon, simple world, Duke-style view where the
+  renderer supports it, a 60% view area, low textures and 4 kHz PC-speaker sound (8 kHz fallback without the 4 kHz pack).
+- Do not copy the owner's resolution, keys, mouse preferences, identity or hardware/CPU detection into the preset.
+  The existing half-desktop window, supported 75% render scale and OFF restoration path are retained.
+- Weapons, enemies, ammunition, powerups and other gameplay objects remain enabled. Both draw-distance controls,
+  object distance and Quake 1 fog are off: that fog otherwise creates an implicit far plane even at draw distance 0.
+  Ordinary walls still occlude objects. Cosmetic corpse/gib/effect reductions remain part of the profile.
+- Applying the EXTREME menu toggle restarts video and sound together; previously its changed audio backend/rate
+  could remain inactive. A missing preset file no longer proceeds to the half-window step or marks the toggle ON.
+- Quick: my presets includes EXTREME once on every renderer through the same preset function. Benchmarks keep
+  their current output mode; their displayed run count is calculated from the updated plan.
+- Validation: C89 checks, eight executions of the parsed production profile across renderer/pack/capability
+  combinations, and four actual menu-apply cases for the video/audio restart. Window/OFF logic is unchanged.
+  Not built locally in Visual Studio 2005; this new EXTREME profile has not been gameplay- or FPS-tested.
+- The owner reports the preceding wall/stair/lift flicker resolved. That feedback does not validate this new
+  EXTREME profile. No PAK, DLL or EXE bytes changed; rebuild both client configurations before testing.
+
+
+- The preset benchmark preserves the existing first/baseline case, and its view-area guard accepts EXTREME's
+  60% view instead of silently changing it to 100%. Older interrupted benchmark plans are not resumed into this plan.

@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "quake2", "quake2.vcproj", "{9808FD90-5AFD-4861-9176-2E0222B7F914}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ref_gl", "ref_gl\ref_gl.vcproj", "{60938578-F318-4714-ACCB-4B0CD11B6786}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game", "game\game.vcproj", "{C6F0FBB2-005F-48B7-B0C7-0F7E11EDAB81}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ref_soft", "ref_soft.vcproj", "{72C89471-3322-46F0-A0F6-860D33882896}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|Win32 = Release|Win32
+		Release_SSE|Win32 = Release_SSE|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{72C89471-3322-46F0-A0F6-860D33882896}.Release|Win32.ActiveCfg = Release|Win32
+		{72C89471-3322-46F0-A0F6-860D33882896}.Release|Win32.Build.0 = Release|Win32
+		{9808FD90-5AFD-4861-9176-2E0222B7F914}.Release|Win32.ActiveCfg = Release|Win32
+		{9808FD90-5AFD-4861-9176-2E0222B7F914}.Release|Win32.Build.0 = Release|Win32
+		{60938578-F318-4714-ACCB-4B0CD11B6786}.Release|Win32.ActiveCfg = Release|Win32
+		{60938578-F318-4714-ACCB-4B0CD11B6786}.Release|Win32.Build.0 = Release|Win32
+		{C6F0FBB2-005F-48B7-B0C7-0F7E11EDAB81}.Release|Win32.ActiveCfg = Release|Win32
+		{C6F0FBB2-005F-48B7-B0C7-0F7E11EDAB81}.Release|Win32.Build.0 = Release|Win32
+		{72C89471-3322-46F0-A0F6-860D33882896}.Release_SSE|Win32.ActiveCfg = Release_SSE|Win32
+		{72C89471-3322-46F0-A0F6-860D33882896}.Release_SSE|Win32.Build.0 = Release_SSE|Win32
+		{9808FD90-5AFD-4861-9176-2E0222B7F914}.Release_SSE|Win32.ActiveCfg = Release_SSE|Win32
+		{9808FD90-5AFD-4861-9176-2E0222B7F914}.Release_SSE|Win32.Build.0 = Release_SSE|Win32
+		{60938578-F318-4714-ACCB-4B0CD11B6786}.Release_SSE|Win32.ActiveCfg = Release_SSE|Win32
+		{60938578-F318-4714-ACCB-4B0CD11B6786}.Release_SSE|Win32.Build.0 = Release_SSE|Win32
+		{C6F0FBB2-005F-48B7-B0C7-0F7E11EDAB81}.Release_SSE|Win32.ActiveCfg = Release_SSE|Win32
+		{C6F0FBB2-005F-48B7-B0C7-0F7E11EDAB81}.Release_SSE|Win32.Build.0 = Release_SSE|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

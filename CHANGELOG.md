@@ -1,0 +1,102 @@
+# Changelog
+
+## 3.60i EXTREME profile update - 23 November 2026
+
+- The EXTREME toggle uses the owner's config as the graphics/audio reference: classic low-end sprites, front/back
+  enemy views at 6.25 fps, slower far animation, static 2D view weapon, simple world, Duke-style view where the
+  renderer supports it, a 60% view area, low textures and 4 kHz PC-speaker sound (8 kHz fallback without the 4 kHz pack).
+- Do not copy the owner's resolution, keys, mouse preferences, identity or hardware/CPU detection into the preset.
+  The existing half-desktop window, supported 75% render scale and OFF restoration path are retained.
+- Weapons, enemies, ammunition, powerups and other gameplay objects remain enabled. Both draw-distance controls,
+  object distance and Quake 1 fog are off: that fog otherwise creates an implicit far plane even at draw distance 0.
+  Ordinary walls still occlude objects. Cosmetic corpse/gib/effect reductions remain part of the profile.
+- Applying the EXTREME menu toggle restarts video and sound together; previously its changed audio backend/rate
+  could remain inactive. A missing preset file no longer proceeds to the half-window step or marks the toggle ON.
+- Quick: my presets includes EXTREME once on every renderer through the same preset function. Benchmarks keep
+  their current output mode; their displayed run count is calculated from the updated plan.
+- Validation: C89 checks, eight executions of the parsed production profile across renderer/pack/capability
+  combinations, and four actual menu-apply cases for the video/audio restart. Window/OFF logic is unchanged.
+  Not built locally in Visual Studio 2005; this new EXTREME profile has not been gameplay- or FPS-tested.
+- The owner reports the preceding wall/stair/lift flicker resolved. That feedback does not validate this new
+  EXTREME profile. No PAK, DLL or EXE bytes changed; rebuild both client configurations before testing.
+
+## 3.60i follow-up - provisional stair movement
+
+- Camera step smoothing now starts when an unsent/provisional movement command first climbs a step. It records
+  the actual command sequence and rejects replays/older steps, so committing that same command does not restart
+  the 100 ms smoothing. This corrects a source-level vertical-pop path with fixed physics/packet throttling.
+- Movement commands, Pmove calls, final predicted positions, collision and network data are unchanged. The shared
+  client change applies to both executable configurations and all renderers, including binary-only legacy ones.
+- Validation: C89 syntax/declaration checks and regression cases evaluated from the actual helper's parsed C body:
+  first provisional step, replay/commit deduplication, ground/height bounds and command-sequence wrap. Not built locally
+  in Visual Studio 2005. The owner subsequently reported the visual issue resolved.
+- The owner now reports the earlier wall/stair/lift flicker resolved. Earlier individual shadow, relief and
+  frame-cap tests had not improved it. The exact tested binary hash was not supplied.
+
+- That camera-step change did not alter preset values, PAK files or VSync. Version and source archive filename remain 1.0 /
+  BDGN 3.60i. Required Software assembler objects are explicitly retained by the GitHub ignore rules.
+
+## 3.60i corrective source update - 23 November 2026
+
+- Railgun impact coordinates are no longer changed by the beam effect. A black burn mark is followed by four
+  overlapping, denser impact smoke puffs when marks and modern smoke are enabled. The cloud starts after the core,
+  grows for one second and fades for two seconds, using the installed effect textures.
+- Modern wall relief and per-pixel light overlays use a biased less-or-equal depth test instead of exact depth
+  equality. Relief height sampling has uniform control flow, filtered heights and finer ray steps to reduce motion
+  shimmer in MAX 4K. Original textures, geometry, collision and old renderers are unchanged.
+- Pickup sprites retain their native silhouette without texture-detail reduction or mipmaps. Object distance
+  culling applies to cosmetic gibs/debris, never rotating weapons, ammunition or powerups.
+- Avetar, Claude and ChatGPT are credited in the game and public documentation.
+- Version and archive filename remain 1.0 / BDGN 3.60i at the owner's request. No PAK files changed.
+- Validation: changed C functions checked for syntax/C89 declaration placement; relief shader checked on the
+  available OpenGL driver. Not built in VS2005 and not play-tested; the supplied executables/DLLs are unchanged.
+  Rebuild Release and Release_SSE before testing the fixes. Real stair-motion, MAX 4K and EXTREME gameplay checks
+  remain necessary. The AMD and Rendition binary-only renderers are unchanged: the modern overlay and decal fixes
+  concern ref_gl, and the shared client visibility/endpoint fixes concern the rebuilt client.
+- Online: client visuals only; no protocol, collision, prediction, game rules or model/sound indices changed.
+
+## #Quake2ToTheMAX 1.0 (BDGN 3.60i), 2026-11
+
+First public release.
+
+- Installer (`Quake2ToTheMAX_1.0_Setup.exe`, Windows 95 to 11). It finds Quake II (Steam, GOG, the CD install,
+  the usual folders) and adds id Software's 3.20 patch when pak1.pak or pak2.pak is missing. It backs up your
+  quake2.exe and DLLs, and installs the texture packs you choose. It finds the packs next to itself or in a
+  Q2TTM_zip folder, or you can use *Browse...*.
+- One pak file per texture set. AI 4K comes in three parts, each under 2 GB.
+- Quake2SSE.exe with its own SSE renderers and game DLL, next to the normal quake2.exe.
+- Duke Nukem 3D mode and the "Duke 3D view (Build)" toggle (Animations menu, under Wolfenstein 3D mode): looking up
+  and down moves the horizon instead of tilting the view, as in the Build engine. The crosshair stays on the aim and
+  the weapon stays put. OpenGL and Software renderers.
+- The installer has two very special offers. Nothing is downloaded or installed.
+- fastest preset (EXTREME): the fastest measured preset, in a window half the size of the screen, with render
+  scale 75 %.
+- Weapons, items and enemies are visible in every preset: no object draw distance and no draw distance in the
+  presets.
+- Menus: Enter and the new *apply* rows apply changes on the Video sub-pages. Effect pages apply their changes when
+  you leave them with Esc.
+- AMD ref_glam / ref_swam and Rendition ref_v1k: the PCX loader no longer writes outside the picture. This fixes
+  possible crashes with the simplified models. ref_swam gets `r_pagein` (no page-in on low RAM computers).
+- The benchmark menu is reduced to *Quick: my presets*. The test menu became *advanced...*. Development tests are
+  removed.
+
+## BDGN 3.28 to 3.60 (the road to 1.0)
+
+- 3.28 (Nitton Åttiofyra): 3DNow! optimizations, the BDGN base.
+- 3.3x-3.4x: hardware detection, presets per graphics card family, Cacheman, mtgl32 SMP OpenGL, AMD 3DNow!
+  renderers.
+- 3.5x: Software renderer with id's Pentium assembler again, SMP software rendering, low RAM modes, 2D sprite
+  enemies and weapons, HD texture packs, HD and 3D weapon effects, per-pixel lighting, reflective water, bloom,
+  SSAO, shadow volumes, AI Stable Diffusion and AI 4K textures, fidelity presets, the in-game benchmark, retro modes
+  (Doom, Build, Quake 1, Wolfenstein 3D).
+- 3.59-3.60: Rendition and S3 Virge support, PC speaker sound, raw mouse input, console completion and history,
+  server security fixes, 3dfx MiniGL fixes, page-in fix for low RAM, measured presets from the testers' machines.
+
+Credits: Avetar; AI development assistance by Claude and ChatGPT. See CREDITS.md.
+
+Brain Drain: [website](https://braindrainlan.com/),
+[YouTube](https://www.youtube.com/channel/UCepdDpsXhGYvhMJjzLn0cWg),
+[Facebook](https://www.facebook.com/braindrainlan).
+
+- The preset benchmark preserves the existing first/baseline case, and its view-area guard accepts EXTREME's
+  60% view instead of silently changing it to 100%. Older interrupted benchmark plans are not resumed into this plan.

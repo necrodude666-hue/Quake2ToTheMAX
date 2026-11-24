@@ -1,0 +1,6 @@
+bdgn_unzip.exe (used by the installer; Windows 95 to 11; KERNEL32 only):
+  i686-w64-mingw32-gcc -std=gnu89 -Os -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -march=i386
+    -nostdlib -e _bdgn_start -o bdgn_unzip.exe bdgn_unzip.c -lkernel32 -s -Wl,--major-subsystem-version,4
+bdgn_packtool.exe (builds the texture zips on your computer):
+  i686-w64-mingw32-gcc -std=gnu89 -O2 -march=i386 -o bdgn_packtool.exe bdgn_packtool.c -s
+VS2005 works too: an empty console project with the file (bdgn_unzip: no CRT, entry point bdgn_start).
