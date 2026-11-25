@@ -1643,7 +1643,7 @@ qboolean GL_ScaleBegin(const refdef_t *view,refdef_t *scaled_view,float ui_scale
   if(post_fxaa->value) requested|=POST_FXAA;
   if((modern_puff && (modern_soft->value || modern_smoke->value)) ||
      (modern_screen && (modern_ssr->value || modern_gi->value || modern_fog->value ||
-       (modern_caustics->value && (view->rdflags&RDF_UNDERWATER))))) requested|=POST_MODERN;
+       ((modern_caustics->value || modern_water_scatter->value) && (view->rdflags&RDF_UNDERWATER))))) requested|=POST_MODERN;
   if(post_bloom->value) requested|=POST_BLOOM;
   if(post_ssao->value) requested|=POST_SSAO;
   if(post_tonemap->value>0) requested|=POST_TONEMAP;

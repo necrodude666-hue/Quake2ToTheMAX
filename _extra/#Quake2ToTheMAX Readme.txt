@@ -265,6 +265,11 @@ are in the separate Q2TTM_SciFi_Skies.zip; extract it to the game folder.
 New lighting/material, soft smoke, SSR, SSGI, thin fog and underwater-caustic
 options have their own capability checks. Default keeps them off; eligible
 MAX Fidelity 4K enables them. Modern graphics + skies is a separate benchmark.
-SMP system OpenGL now offers the quality profiles too; unsupported MTGL
-shader effects retain the original rendering path. See README.md in the
+SMP system OpenGL on modern CPUs now uses native GL plus CPU pose workers,
+so the same driver-supported fidelity effects work as ordinary OpenGL. See README.md in the
 source package for values, material sidecars, validation and limitations.
+
+Underwater caustics now follow refracted sun/lamp light through exposed water.
+Video -> effects & water: underwater light shafts = off / low / high.
+gl_smp_stats reports actual native worker activity. The modern benchmark has
+36 available cases including water quality and native SMP off/on.

@@ -760,7 +760,7 @@ qboolean CL_FX3D_RocketExplosion (vec3_t pos)
 	FX_TowardsViewer (org, 10, puff);	/* billboards: not cut by the wall */
 	FX_Anim (M_FIRE1 + rand () % 3, puff, ang, RF_PUFFS, 0, 10, 1.0f);
 	VectorMA (pos, 20, n, glow);
-	FX_Light (glow, 2200, 520, 0, 1.0f, 0.62f, 0.28f, 0.9f, 0.25f, 0.05f, 0.25f);
+	FX_Light (pos, 2200, 520, 0, 1.0f, 0.62f, 0.28f, 0.9f, 0.25f, 0.05f, 0.25f);
 	FX_Distort (glow, 0, 960, 38, 76, 0.40f, 0);
 	CL_FX3D_ExplosionSmoke (pos, true);
 	return true;
@@ -784,7 +784,7 @@ qboolean CL_FX3D_GrenadeExplosion (vec3_t pos)
 	FX_TowardsViewer (org, 10, puff);
 	FX_Anim ((rand () & 1) ? M_GREN1 : M_GREN2, puff, ang, RF_PUFFS, 0, 20, 1.0f);
 	VectorMA (pos, 24, n, glow);
-	FX_Light (glow, 900, 600, 0, 1.0f, 0.7f, 0.35f, 0.8f, 0.2f, 0.05f, 0.3f);
+	FX_Light (pos, 900, 600, 0, 1.0f, 0.7f, 0.35f, 0.8f, 0.2f, 0.05f, 0.3f);
 	FX_Distort (glow, 0, 550, 60, 140, 0.8f, 0);
 	FX_Distort (org, 0, 320, 230, 230, 1.0f, 1);
 	return true;
@@ -814,7 +814,7 @@ qboolean CL_FX3D_BFGExplosion (vec3_t pos, qboolean big)
 	FX_Anim (M_BFG_ARCS, glow, ang, RF_FXMESH | RF_FXADD, 0, 20, 1.0f);
 	FX_Anim (M_BFG_CORE, glow, ang, RF_PUFFS | RF_FULLBRIGHT, 0, 20, 1.0f);
 	VectorMA (pos, 24, n, glow);
-	FX_Light (glow, 1600, 650, 0, 0.25f, 1.0f, 0.35f, 0.0f, 0.55f, 0.1f, 0.2f);
+	FX_Light (pos, 1600, 650, 0, 0.25f, 1.0f, 0.35f, 0.0f, 0.55f, 0.1f, 0.2f);
 	FX_Distort (glow, 0, 900, 80, 200, 0.9f, 0);
 	FX_Distort (glow, 0, 500, 320, 320, 1.0f, 1);
 	CL_FX3D_BFGMist (pos, re_frames_hint(M_BFG_ARCS)*1000/20, false);

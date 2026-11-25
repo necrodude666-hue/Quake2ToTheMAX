@@ -1338,12 +1338,14 @@ void R_RenderView (refdef_t *fd)
 	R_SetupGL ();
 
 	R_MarkLeaves ();	// done here so we know if we're in water
+ R_SMPPrepare();
 
 	BDGN_PROF_CALL( PROF_WORLD, R_DrawWorld () );
 	if (r_drawworld->value) BDGN_PROF_CALL(PROF_WORLD, GL_DrawRelief());	/* BDGN 3.55ah: 3D surface structure, before the light passes */
 	if (r_drawworld->value) BDGN_PROF_CALL(PROF_LIGHT, GL_DrawPixelLight());
 
 	R_DrawEntitiesOnList ();	/* BDGN 3.52t: areas per entity inside */
+ R_SMPFinish();
 
 	BDGN_PROF_CALL( PROF_LIGHT, R_RenderDlights () );
 
@@ -2087,6 +2089,7 @@ qboolean R_Init( void *hinstance, void *hWnd )
 	GL_ScaleInit();
 	GL_InitPixelLighting();
  GL_InitModernEffects();
+ R_SMPInit();
 	GL_InitDistortion();	/* BDGN 3.55t */
 	ri.Vid_MenuInit();
 	{	/* BDGN 3.57h: where the start of the renderer goes (bdgn_startup.txt has it as one line) */
@@ -2117,6 +2120,7 @@ R_Shutdown
 */
 void R_Shutdown (void)
 {
+ R_SMPShutdown();
 	GL_ScaleShutdown();
 	R_DukeReset();
 	ri.Cmd_RemoveCommand("duke_stats");

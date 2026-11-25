@@ -67,13 +67,17 @@ static void ModernMaterial(image_t *image,float *rough,float *metal)
  modern_materials[i].rough=*rough; modern_materials[i].metal=*metal;
 }
 
+#include "gl_waterlight.h"
+
 static void ModernShutdown(void)
 {
- GLuint textures[3]={MODERN_COLOUR,MODERN_DEPTH,MODERN_MATERIAL};
+ GLuint textures[4]={MODERN_COLOUR,MODERN_DEPTH,MODERN_MATERIAL,WATER_MASK};
  if(modern_screen) delete_program(modern_screen);
  if(modern_puff) delete_program(modern_puff);
  if(modern_mask_fb && del_fb) del_fb(1,&modern_mask_fb);
- if(modern_width && qglDeleteTextures) qglDeleteTextures(3,textures);
+ if(modern_width && qglDeleteTextures) qglDeleteTextures(4,textures);
+ water_mask_valid=0; water_mask_model=NULL;
+ free(water_wet_surfaces); water_wet_surfaces=NULL; water_wet_model=NULL;
  free(modern_uniforms); modern_uniforms=NULL; modern_uniform_count=0;
  free(modern_materials); modern_materials=NULL;
  modern_screen=modern_puff=modern_mask_fb=0;
@@ -89,6 +93,7 @@ void GL_InitModernEffects(void)
  modern_gi=ri.Cvar_Get("gl_ssgi","0",CVAR_ARCHIVE);
  modern_fog=ri.Cvar_Get("gl_volume_fog","0",CVAR_ARCHIVE);
  modern_caustics=ri.Cvar_Get("gl_caustics","0",CVAR_ARCHIVE);
+ modern_water_scatter=ri.Cvar_Get("gl_water_scattering","0",CVAR_ARCHIVE);
  ri.Cvar_SetValue("bdgn_gl_materials_capable",0);
  ri.Cvar_SetValue("bdgn_gl_soft_particles_capable",0);
  ri.Cvar_SetValue("bdgn_gl_environment_capable",0);
@@ -119,7 +124,7 @@ int GL_ModernNeedsCleanWorld(void)
  if(!modern_screen && !modern_puff) return 0;
  return ModernWorld() && ((modern_puff && (modern_soft->value || modern_smoke->value)) ||
   (modern_screen && (modern_ssr->value || modern_gi->value || modern_fog->value ||
-    (modern_caustics->value && (r_newrefdef.rdflags&RDF_UNDERWATER)))));
+    ((modern_caustics->value || modern_water_scatter->value) && (r_newrefdef.rdflags&RDF_UNDERWATER)))));
 }
 
 static void ModernTexture(GLuint texture,GLint format,int depth)
@@ -231,7 +236,7 @@ static int ModernInverse(const GLfloat *m,GLfloat *inverse)
 
 static void ModernMask(void)
 {
- msurface_t *s; int i,j; GLfloat rough,metal;
+ msurface_t *s; int i,j,wet; GLfloat rough,metal;
  bind_fb(SCALE_FB,modern_mask_fb); qglViewport(0,0,modern_view[2],modern_view[3]);
  qglClearColor(1,0,0,0); qglColorMask(1,1,1,1); qglDisable(GL_SCISSOR_TEST); qglClear(GL_COLOR_BUFFER_BIT);
  use_program(0); GL_EnableMultitexture(false); qglDisable(GL_TEXTURE_2D); qglDisable(GL_BLEND); qglDisable(GL_ALPHA_TEST);
@@ -243,27 +248,29 @@ static void ModernMask(void)
   if(s->visframe!=r_framecount || !p || (s->texinfo->flags&(SURF_SKY|SURF_WARP|SURF_TRANS33|SURF_TRANS66))) continue;
   side=DotProduct(r_origin,s->plane->normal)-s->plane->dist;
   if((side<0)!=((s->flags&SURF_PLANEBACK)!=0)) continue;
-  ModernMaterial(R_TextureAnimationFrame(s->texinfo,(int)(r_map_animation_time*2)),&rough,&metal);
-  if((1-rough)*(.04f+.55f*metal)<=.015f) continue;
-  qglColor4f(rough,metal,0,1); qglBegin(GL_POLYGON);
+  rough=1; metal=0; wet=water_mask_valid?ModernWetSurface(s):0;
+  if(modern_ssr->value) ModernMaterial(R_TextureAnimationFrame(s->texinfo,(int)(r_map_animation_time*2)),&rough,&metal);
+  if(!wet && (1-rough)*(.04f+.55f*metal)<=.015f) continue;
+  qglColor4f(rough,metal,wet?1.0f:0.0f,1); qglBegin(GL_POLYGON);
   for(j=0;j<p->numverts;j++) qglVertex3fv(p->verts[j]); qglEnd();
  }
 }
 
 void GL_ModernEnvironment(void)
 {
- GLfloat projection[16],inverse[16]; GLint previous,program,mode,active; glstate_t saved; int i;
+ GLfloat projection[16],inverse[16]; GLint previous,program,mode,active; glstate_t saved; int i,water;
  if(modern_stamp!=r_framecount || !modern_screen || !ModernWorld() ||
    (!modern_ssr->value && !modern_gi->value && !modern_fog->value &&
-    !(modern_caustics->value && (r_newrefdef.rdflags&RDF_UNDERWATER)))) return;
+    !((modern_caustics->value || modern_water_scatter->value) && (r_newrefdef.rdflags&RDF_UNDERWATER)))) return;
+ water=(modern_caustics->value || modern_water_scatter->value)?ModernWaterEntry():0;
  qglGetFloatv(GL_PROJECTION_MATRIX,projection); if(!ModernInverse(projection,inverse)) return;
  saved=gl_state; qglGetIntegerv(0x8CA6,&previous); qglGetIntegerv(0x8B8D,&program); qglGetIntegerv(GL_MATRIX_MODE,&mode); qglGetIntegerv(0x84E0,&active);
  qglPushAttrib(GL_ALL_ATTRIB_BITS); qglMatrixMode(GL_MODELVIEW); qglPushMatrix(); qglMatrixMode(GL_PROJECTION); qglPushMatrix();
- if(modern_ssr->value) ModernMask();
+ if(modern_ssr->value || water) ModernMask();
  bind_fb(SCALE_FB,previous); qglViewport(modern_view[0],modern_view[1],modern_view[2],modern_view[3]);
  post_active_texture(0x84C0); qglBindTexture(GL_TEXTURE_2D,MODERN_COLOUR);
  qglCopyTexSubImage2D(GL_TEXTURE_2D,0,0,0,modern_view[0],modern_view[1],modern_view[2],modern_view[3]);
- for(i=0;i<3;i++) { post_active_texture(0x84C0+i); qglBindTexture(GL_TEXTURE_2D,i==0?MODERN_COLOUR:i==1?MODERN_DEPTH:MODERN_MATERIAL); }
+ for(i=0;i<4;i++) { post_active_texture(0x84C0+i); qglBindTexture(GL_TEXTURE_2D,i==0?MODERN_COLOUR:i==1?MODERN_DEPTH:i==2?MODERN_MATERIAL:WATER_MASK); }
  post_active_texture(0x84C0); qglEnable(GL_TEXTURE_2D); qglDisable(GL_DEPTH_TEST); qglDisable(GL_BLEND); qglDisable(GL_ALPHA_TEST); qglDisable(GL_CULL_FACE); qglDepthMask(0);
  qglColorMask(1,1,1,1); qglDisable(GL_SCISSOR_TEST); qglMatrixMode(GL_PROJECTION); qglLoadIdentity(); qglMatrixMode(GL_MODELVIEW); qglLoadIdentity();
  use_program(modern_screen); post_uniform1i(ModernUniform(modern_screen,"scene"),0); post_uniform1i(ModernUniform(modern_screen,"depthTex"),1); post_uniform1i(ModernUniform(modern_screen,"materialTex"),2);
@@ -277,6 +284,11 @@ void GL_ModernEnvironment(void)
  pixel_uniform4f(ModernUniform(modern_screen,"rightAxis"),vright[0],vright[1],vright[2],0);
  pixel_uniform4f(ModernUniform(modern_screen,"upAxis"),vup[0],vup[1],vup[2],0);
  pixel_uniform4f(ModernUniform(modern_screen,"forwardAxis"),vpn[0],vpn[1],vpn[2],0);
+ post_uniform1i(ModernUniform(modern_screen,"waterMask"),3);
+ pixel_uniform4f(ModernUniform(modern_screen,"waterData"),water_mask_height,(float)water_mask_x-512,(float)water_mask_y-512,1.0f/1024);
+ pixel_uniform4f(ModernUniform(modern_screen,"waterDirection"),water_light_dir[0],water_light_dir[1],water_light_dir[2],water?1.0f:0.0f);
+ pixel_uniform4f(ModernUniform(modern_screen,"waterColour"),water_light_colour[0],water_light_colour[1],water_light_colour[2],0);
+ uniform2f(ModernUniform(modern_screen,"waterModes"),water && modern_caustics->value?1.0f:0.0f,water?modern_water_scatter->value:0.0f);
  ModernLights(modern_screen,modern_fog->value!=0);
  qglBegin(GL_QUADS); qglVertex2f(-1,-1); qglVertex2f(1,-1); qglVertex2f(1,1); qglVertex2f(-1,1); qglEnd();
  use_program(program); qglMatrixMode(GL_PROJECTION); qglPopMatrix(); qglMatrixMode(GL_MODELVIEW); qglPopMatrix(); qglMatrixMode(mode);

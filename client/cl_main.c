@@ -951,7 +951,7 @@ static int BenchCurrentSmp (void)
  if (!Q_stricmp((char *)ref,"soft"))
   return bench_force_smp || Cvar_VariableValue("sw_smp") > 0;
  return (!Q_stricmp((char *)ref,"gl") || !Q_stricmp((char *)ref,"glam")) &&
-        !Q_stricmp(Cvar_VariableString("gl_driver"),"mtgl32");
+        (Cvar_VariableValue("gl_smp")>0 || !Q_stricmp(Cvar_VariableString("gl_driver"),"mtgl32"));
 }
 
 static void BenchBuildCases (void)

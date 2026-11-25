@@ -39,6 +39,8 @@ float	r_avertexnormals[NUMVERTEXNORMALS][3] = {
 #include "anorms.h"
 };
 
+#include "gl_smp.h"
+
 typedef float vec4_t[4];
 
 static	vec4_t	s_lerped[MAX_VERTS];
@@ -324,6 +326,7 @@ static int GL_DrawAliasFast (dmdl_t *paliashdr, dtrivertx_t *v, dtrivertx_t *ov,
 	fastmesh_t	*fm = (fastmesh_t *)currentmodel->fastmesh;
 	int			i;
 	int			mode = GL_FASTDRAW();	// 1 = triangle list, 2 = strips/fans, 3 = strips/fans + byte colours
+	const smp_pose_t *pose=SMP_Pose(currententity,paliashdr,currententity->backlerp);
 	int			flat = ( shadedots == s_flatdots );	// gl_flatmodels: one colour for the whole model, no colour array
 
 	if ( !fm )
@@ -336,7 +339,8 @@ static int GL_DrawAliasFast (dmdl_t *paliashdr, dtrivertx_t *v, dtrivertx_t *ov,
 
 	if ( GL_3DNOW() )
 	{
-		Q3D_LerpVertsIdx( fm->nexp, fm->xyz, (const unsigned char *)v, (const unsigned char *)ov, s_fx_lerp, move, frontv, backv );
+		if(!pose) Q3D_LerpVertsIdx( fm->nexp, fm->xyz, (const unsigned char *)v, (const unsigned char *)ov, s_fx_lerp, move, frontv, backv );
+  else for(i=0;i<fm->nexp;i++) memcpy(s_fx_lerp+i*4,pose->xyz[fm->xyz[i]],4*sizeof(float));
 		if ( flat )
 			;
 		else if ( mode >= 3 )
@@ -351,10 +355,13 @@ static int GL_DrawAliasFast (dmdl_t *paliashdr, dtrivertx_t *v, dtrivertx_t *ov,
 			int x = fm->xyz[i];
 			float l = shadedots[v[x].lightnormalindex];
 
+   if(pose) memcpy(s_fx_lerp+i*4,pose->xyz[x],4*sizeof(float));
+   else {
 			s_fx_lerp[i*4+0] = move[0] + ov[x].v[0]*backv[0] + v[x].v[0]*frontv[0];
 			s_fx_lerp[i*4+1] = move[1] + ov[x].v[1]*backv[1] + v[x].v[1]*frontv[1];
 			s_fx_lerp[i*4+2] = move[2] + ov[x].v[2]*backv[2] + v[x].v[2]*frontv[2];
 			s_fx_lerp[i*4+3] = 0;
+   }
 			if ( flat )
 			{
 			}
@@ -506,7 +513,10 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 
 	lerp = s_lerped[0];
 
-	GL_LerpVerts( paliashdr->num_xyz, v, ov, verts, lerp, move, frontv, backv );
+ { const smp_pose_t *pose=SMP_Pose(currententity,paliashdr,backlerp);
+   if(pose) memcpy(s_lerped,pose->xyz,paliashdr->num_xyz*sizeof(s_lerped[0]));
+   else GL_LerpVerts(paliashdr->num_xyz,v,ov,verts,lerp,move,frontv,backv);
+ }
 
 	if ( gl_vertex_arrays->value && ( !gl_vaunsafe || gl_fastforce->value ) )	/* BDGN 3.52i: not on 3dfx drivers (gl_vaunsafe), like the batched paths */
 	{
@@ -1147,6 +1157,12 @@ static void R_PixelLightAlias (dmdl_t *paliashdr, float backlerp)
 	float		frontlerp = 1.0f - backlerp;
 	int		i;
 
+ { const smp_pose_t *pose=SMP_Pose(currententity,paliashdr,backlerp);
+   if(pose) {
+    GL_DrawPixelLightModel((const float (*)[4])pose->xyz,(const float (*)[3])pose->normal,
+      (const int *)((byte *)paliashdr+paliashdr->ofs_glcmds)); return;
+   }
+ }
 	if ( paliashdr->num_xyz > MAX_VERTS )
 		return;
 	frame = (daliasframe_t *)((byte *)paliashdr + paliashdr->ofs_frames + currententity->frame * paliashdr->framesize);

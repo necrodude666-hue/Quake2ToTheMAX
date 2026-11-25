@@ -673,24 +673,11 @@ qboolean VID_FidelityPresetAvailable(int id)
 {
 	const gl_fidelity_preset_t *tier=GL_FidelityPreset(id);
 	const char *driver=Cvar_VariableString("gl_driver");
-	int needed,post,msaa,smp=0;
- char target[MAX_QPATH];
- if (!Q_stricmp(driver,"mtgl32") || !Q_stricmp(driver,"mtgl32.dll")) {
-  VID_GetMtGlTarget(target,sizeof(target));
-  smp=!target[0] || !Q_stricmp(target,"opengl32") || !Q_stricmp(target,"opengl32.dll");
- }
-	if (!tier || Q_stricmp(Cvar_VariableString("vid_ref"),"gl") ||
-	    Cvar_VariableValue("vid_rendition") ||
-	    (!smp && Q_stricmp(driver,"opengl32") && Q_stricmp(driver,"opengl32.dll")))
-		return false;
- /* Native OpenGL through MTGL keeps the same quality profiles. The wrapper
-    owns its GL context: individual shader/FBO controls retain their REAL caps.
-    Never transfer native function pointers/capabilities to its worker. */
- if (smp) {
-  if (Cvar_VariableValue("bdgn_legacy_graphics") || !Cvar_VariableValue("bdgn_modern_lighting_cpu") ||
-      atoi(Cvar_VariableString("bdgn_gl_version"))<2) return false;
-  return tier->hdset[0]!=5 || FS_HDTexSetAvailable(5);
- }
+ int needed,post,msaa;
+ if (!tier || Q_stricmp(Cvar_VariableString("vid_ref"),"gl") ||
+     Cvar_VariableValue("vid_rendition") || Cvar_VariableValue("bdgn_legacy_graphics") ||
+     !Cvar_VariableValue("bdgn_modern_lighting_cpu") ||
+     (Q_stricmp(driver,"opengl32") && Q_stricmp(driver,"opengl32.dll"))) return false;
 	if (tier->hdset[0]==5 && (!FS_HDTexSetAvailable(5) || !Cvar_VariableValue("bdgn_gl_dds_capable")))
 		return false;	/* BDGN 3.55w: Ultra High Fidelity - 4K needs the 4K set and S3TC */
 	needed=GL_VisualEffects(&tier->visual);
@@ -1449,7 +1436,7 @@ static int PresetCvarWanted( const char *name )
 }
 
 static const char *preset_stock_defaults[][2] = {
- {"gl_materials","0"}, {"gl_soft_particles","0"}, {"gl_smoke_lighting","0"}, {"gl_ssr","0"}, {"gl_ssgi","0"}, {"gl_volume_fog","0"}, {"gl_caustics","0"},
+ {"gl_water_scattering","0"}, {"gl_materials","0"}, {"gl_soft_particles","0"}, {"gl_smoke_lighting","0"}, {"gl_ssr","0"}, {"gl_ssgi","0"}, {"gl_volume_fog","0"}, {"gl_caustics","0"},
 
 		{ "cl_maxfps", "100" }, { "cl_particles", "1" }, { "cl_gun", "1" }, { "cl_footsteps", "1" },
 		{ "cl_predict", "1" }, { "cl_blend", "1" }, { "gl_polyblend", "1" }, { "gl_flashblend", "0" },
@@ -2274,8 +2261,7 @@ qboolean VID_ApplyPresetSettings(int id,qboolean archive)
 
 	if (tier) {
 		if (!VID_FidelityPresetAvailable(id)) return false;
-  if (BDGN_GLDriverIs(Cvar_VariableString("gl_driver"),"mtgl32"))
-   Com_Printf("SMP OpenGL: quality profile selected; unsupported wrapper effects use the original rendering path.\n");
+
 		id=5;
 	}
 
@@ -2600,6 +2586,7 @@ qboolean VID_ApplyPresetSettings(int id,qboolean archive)
   SetPresetValue("gl_ssgi",Cvar_VariableValue("bdgn_gl_environment_capable")?"2":"0");
   SetPresetValue("gl_volume_fog",Cvar_VariableValue("bdgn_gl_environment_capable")?"2":"0");
   SetPresetValue("gl_caustics",Cvar_VariableValue("bdgn_gl_environment_capable")?"1":"0");
+  SetPresetValue("gl_water_scattering",Cvar_VariableValue("bdgn_gl_environment_capable")?"2":"0");
  }
 	if (tier_id==83 && !Cvar_VariableValue("bdgn_legacy_graphics") && !Cvar_VariableValue("bdgn_lowram")) {
 		/* BDGN 3.56v: the best preset, Ultra High Fidelity - 4K, is the owner's own config.cfg of 2026-11-18 ("the
@@ -2834,7 +2821,9 @@ const char *VID_MtGlTargetForRef (int ref)
 {
 	switch (ref)
 	{
-	case REF_MT_OPENGL:
+ case REF_MT_OPENGL:
+  if(Cvar_VariableValue("bdgn_modern_lighting_cpu") && !Cvar_VariableValue("bdgn_legacy_graphics")) return "";
+  return "opengl32.dll";
 	case REF_MT_3DNOW:
 	case REF_MT_RENDITION: return "opengl32.dll";
 	case REF_MT_3DFX: return "3dfxgl.dll";
@@ -2847,6 +2836,7 @@ const char *VID_MtGlTargetForRef (int ref)
 
 static void VID_SetRefCvars( int ref )
 {
+ Cvar_SetValue("gl_smp",0);
 	switch ( ref )
 	{
 	case REF_SWAM:
@@ -2905,7 +2895,12 @@ static void VID_SetRefCvars( int ref )
 		Cvar_SetValue( "gl_bitdepth", 16 );
 		break;
 	// SMP support
-	case REF_MT_OPENGL:
+ case REF_MT_OPENGL:
+  Cvar_Set("vid_ref","gl");
+  if(Cvar_VariableValue("bdgn_modern_lighting_cpu") && !Cvar_VariableValue("bdgn_legacy_graphics")) {
+   Cvar_Set("gl_driver","opengl32"); Cvar_SetValue("gl_smp",1);
+  } else Cvar_Set("gl_driver","mtgl32");
+  break;
 	case REF_MT_RENDITION:
 		Cvar_Set( "vid_ref", "gl" );
 		Cvar_Set( "gl_driver", "mtgl32" );
@@ -3035,8 +3030,8 @@ static int VID_RefFromCvars (int *menu_index)
 			ref = REF_S3VIRGE;
 		else if ( strcmp( gl_driver->string, "pvrgl" ) == 0 )
 			ref = REF_POWERVR;
-		else if ( strcmp( gl_driver->string, "opengl32" ) == 0 )
-			ref = REF_OPENGL;
+		else if ( !Q_stricmp(gl_driver->string,"opengl32") || !Q_stricmp(gl_driver->string,"opengl32.dll") )
+   ref=Cvar_VariableValue("gl_smp")?REF_MT_OPENGL:REF_OPENGL;
 		// SMP support
 		/*
 		else if ( strcmp( gl_driver->string, "mt3dfx" ) == 0 )

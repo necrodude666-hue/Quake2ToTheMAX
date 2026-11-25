@@ -354,3 +354,31 @@ float R_SunShadowDirection (vec3_t origin, float *dx, float *dy)
 	}
 	return 0;
 }
+
+/* A visible, fixed source ABOVE the interface, shared by caustics and shafts.
+   No invented overhead light when the map has no source for this water. */
+int R_WaterLightVisible(vec3_t point,vec3_t source,int sun)
+{
+ vec3_t end;
+ if(sun) { VectorMA(point,8192,r_sun_dir,end); return R_TraceWorld(point,end)==1; }
+ return R_TraceWorld(point,source)==0;
+}
+int R_WaterLight(vec3_t point,vec3_t direction,vec3_t colour,vec3_t source,int *sun)
+{
+ int i,best=-1; float score=0;
+ R_SunCheck();
+ if(r_sun_valid && r_sun_dir[2]>.08f && R_WaterLightVisible(point,point,1)) {
+  VectorCopy(r_sun_dir,direction); VectorCopy(r_sun_color,colour); VectorMA(point,8192,direction,source); *sun=1; return 1;
+ }
+ if(r_lampmodel!=r_worldmodel) R_SunLoadMap();
+ for(i=0;i<r_numlamps;i++) {
+  vec3_t delta; float distance,value;
+  VectorSubtract(r_lamps[i].origin,point,delta); distance=DotProduct(delta,delta);
+  if(delta[2]<=4 || distance>LAMP_RANGE*LAMP_RANGE) continue;
+  value=r_lamps[i].light/(distance+1024);
+  if(value>score && R_WaterLightVisible(point,r_lamps[i].origin,0)) { score=value; best=i; }
+ }
+ if(best<0) return 0;
+ VectorCopy(r_lamps[best].origin,source); VectorSubtract(source,point,direction); VectorNormalize(direction);
+ VectorSet(colour,.85f,.91f,1); *sun=0; return 1;
+}

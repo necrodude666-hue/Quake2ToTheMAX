@@ -1123,6 +1123,14 @@ void VID_CheckChanges (void)
             VID_GetMtGlTarget(target,sizeof(target));
             if(!target[0]) Com_sprintf(target,sizeof(target),"%s","opengl32.dll");
         }
+        /* Upgrade only the system-OpenGL SMP choice, never a legacy ICD.
+           The native renderer runs CPU pose workers and owns its GL context. */
+        if(!Q_stricmp(vid_ref->string,"gl") && !Cvar_VariableValue("vid_rendition") &&
+           Cvar_VariableValue("bdgn_modern_lighting_cpu") && !Cvar_VariableValue("bdgn_legacy_graphics") &&
+           VID_DriverMatches(target,"opengl32","opengl32.dll")) {
+            Cvar_Get("gl_smp","1",CVAR_ARCHIVE); Cvar_SetValue("gl_smp",1);
+            Cvar_Set("gl_driver","opengl32"); strcpy(driver,"opengl32"); target[0]=0;
+        }
         tracked=VID_Is3dfxMtGlTarget(target) ||
                 VID_DriverMatches(driver,"Wicked3DFXgl","Wicked3DFXgl.dll");
 		/*
@@ -1223,6 +1231,7 @@ void VID_Init (void)
 	/* Create the video variables so we know how to start the graphics drivers */
 	vid_ref = Cvar_Get ("vid_ref", "soft", CVAR_ARCHIVE);
 	Cvar_Get ("gl_driver", "opengl32", CVAR_ARCHIVE);
+ Cvar_Get("gl_smp","0",CVAR_ARCHIVE);
 	scr_scale = Cvar_Get ("scr_scale", "0", CVAR_ARCHIVE);	// BDGN 3.50: menu/HUD scale, 0 = auto
 	Cvar_Get ("scr_scale_active", "1", 0);
 	vid_xpos = Cvar_Get ("vid_xpos", "3", CVAR_ARCHIVE);

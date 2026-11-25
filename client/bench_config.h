@@ -15,6 +15,8 @@ typedef struct {
  int flags,count; const char *values[12];
 } benchcfg_t;
 static const benchcfg_t bench_cfg[]={
+ {"gl_water_scattering","WATER","0",NULL,BC_GL|BC_CURRENT,3,{"0","1","2"}},
+ {"gl_smp","NATIVE OPENGL SMP","0",NULL,BC_GL|BC_CURRENT,2,{"0","1"}},
  {"gl_materials","LIGHTING","0",NULL,BC_GL|BC_CURRENT,2,{"0","1"}},
  {"gl_soft_particles","WEAPON EFFECTS","0",NULL,BC_GL|BC_CURRENT,2,{"0","1"}},
  {"gl_smoke_lighting","WEAPON EFFECTS","0",NULL,BC_GL|BC_CURRENT,2,{"0","1"}},
@@ -170,6 +172,8 @@ static int BenchCfgAllowed (int i)
  if(!strcmp(bench_cfg[i].name,"gl_ssr")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
  if(!strcmp(bench_cfg[i].name,"gl_ssgi")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
  if(!strcmp(bench_cfg[i].name,"gl_volume_fog")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if(!strcmp(bench_cfg[i].name,"gl_smp")) return Cvar_VariableValue("bdgn_gl_soft_shadow_capable")!=0;
+ if(!strcmp(bench_cfg[i].name,"gl_water_scattering")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
  if(!strcmp(bench_cfg[i].name,"gl_caustics")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
  if (!strcmp(bench_cfg[i].name,"cl_skybox") || !strcmp(bench_cfg[i].name,"gl_sky_lighting")) return CL_SkyboxAvailable();
  if (!strcmp(bench_cfg[i].name,"gl_pixel_lighting") || !strcmp(bench_cfg[i].name,"gl_pixel_bump"))

@@ -2246,6 +2246,8 @@ SPEED & NETWORK MENU (BDGN 3.37)
 #include "tweak_settings.h"
 #include "../qcommon/q3e_3dnow.h"
 const bdgn_tweak_t bdgn_tweaks[] = {
+ {"WATER","underwater light shafts","gl_water_scattering",NULL,"0",1,3,{0,1,2},0,0,0,TK_GL|TK_MENUONLY,0,{"off","low","high",NULL}},
+
 
  { "DRAW PATHS","model batching","gl_fastdraw","gl_modelbatch_auto","0",4,5,{0,0,1,2,3},1,4,4,1,1,{"auto (3DNow!)","off","triangles","strips/fans","strips + byte",NULL} },
  { "DRAW PATHS","particle batching","gl_fastparticles","gl_particlebatch_auto","0",4,3,{0,0,1},1,2,2,1,2,{"auto (3DNow!)","off","on",NULL} },
@@ -2426,6 +2428,7 @@ void BDGN_TweakDefaults (void)
  Cvar_SetValue("cl_weaponlights",1);
  Cvar_SetValue("cl_lowend_sprites",0);
  Cvar_SetValue("cl_skybox",0); Cvar_SetValue("gl_sky_lighting",1);
+ Cvar_SetValue("gl_water_scattering",0);
  Cvar_SetValue("gl_materials",0); Cvar_SetValue("gl_soft_particles",0); Cvar_SetValue("gl_smoke_lighting",0); Cvar_SetValue("gl_ssr",0); Cvar_SetValue("gl_ssgi",0); Cvar_SetValue("gl_volume_fog",0); Cvar_SetValue("gl_caustics",0);
 
  for(i=0;i<bdgn_tweak_count;i++) {
@@ -2475,6 +2478,7 @@ int BDGN_TweakVisible (int index)
  if(!strcmp(t->cvar,"gl_ssr")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
  if(!strcmp(t->cvar,"gl_ssgi")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
  if(!strcmp(t->cvar,"gl_volume_fog")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if(!strcmp(t->cvar,"gl_water_scattering")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
  if(!strcmp(t->cvar,"gl_caustics")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
  if (!strcmp(t->cvar,"cl_skybox") || !strcmp(t->cvar,"gl_sky_lighting")) return CL_SkyboxAvailable();
  if ((t->flags & TK_GL) && !BDGN_RendererSupports(t->cvar)) return 0;
@@ -2879,7 +2883,8 @@ static const char *s_tweak_notes[][2] = {
  {"gl_ssr","reflections of visible surfaces"},
  {"gl_ssgi","soft reflected screen light"},
  {"gl_volume_fog","thin light-scattering mist"},
- {"gl_caustics","moving light under water"},
+ {"gl_caustics","refracted moving light"},
+ {"gl_water_scattering","soft shafts + depth colour"},
  {"gl_sun","sun and lamp shadows"}, {"gl_godrays","beams of light"},
  {"cl_fxlevel","quality of all effects"}, {"cl_hdfx","sharper effect sprites"}, {"cl_decals","bullet holes, scorch"},
  {"cl_3dexplo","3D fireballs"}, {"cl_3dbfg","3D BFG ball"}, {"cl_3dblaster","3D blaster bolts"}, {"cl_3drail","3D railgun spiral"},

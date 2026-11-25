@@ -1319,7 +1319,7 @@ void CL_ParseTEnt (void)
 		if (CL_HDFX () && cl_hdfx_blaster_hit)
 		{	/* BDGN 3.55s: HD flash, off the wall along its normal */
 			VectorMA (pos, 4, dir, pos2);
-			CL_HDFXExplosion (pos2, cl_hdfx_blaster_hit, 300, 6, 150, 1, 0.8f, 0.3f);
+			CL_HDFXExplosion (pos, cl_hdfx_blaster_hit, 300, 6, 150, 1, 0.8f, 0.3f);
 			S_StartSound (pos, 0, 0, cl_sfx_lashit, 1, ATTN_NORM, 0);
 			break;
 		}
@@ -2391,7 +2391,7 @@ void CL_AddExplosions (void)
 		}
 		if (ex->light && CL_WeaponLightEnabled(ex->light_effects))
 		{
-			V_AddLight (ent->origin, ex->light*ent->alpha,
+			V_AddLight ((ex->pull>0 || ex->based)?ex->base:ent->origin, ex->light*ent->alpha,
 				ex->lightcolor[0], ex->lightcolor[1], ex->lightcolor[2]);
 		}
 
