@@ -673,11 +673,24 @@ qboolean VID_FidelityPresetAvailable(int id)
 {
 	const gl_fidelity_preset_t *tier=GL_FidelityPreset(id);
 	const char *driver=Cvar_VariableString("gl_driver");
-	int needed,post,msaa;
+	int needed,post,msaa,smp=0;
+ char target[MAX_QPATH];
+ if (!Q_stricmp(driver,"mtgl32") || !Q_stricmp(driver,"mtgl32.dll")) {
+  VID_GetMtGlTarget(target,sizeof(target));
+  smp=!target[0] || !Q_stricmp(target,"opengl32") || !Q_stricmp(target,"opengl32.dll");
+ }
 	if (!tier || Q_stricmp(Cvar_VariableString("vid_ref"),"gl") ||
 	    Cvar_VariableValue("vid_rendition") ||
-	    (Q_stricmp(driver,"opengl32") && Q_stricmp(driver,"opengl32.dll")))
+	    (!smp && Q_stricmp(driver,"opengl32") && Q_stricmp(driver,"opengl32.dll")))
 		return false;
+ /* Native OpenGL through MTGL keeps the same quality profiles. The wrapper
+    owns its GL context: individual shader/FBO controls retain their REAL caps.
+    Never transfer native function pointers/capabilities to its worker. */
+ if (smp) {
+  if (Cvar_VariableValue("bdgn_legacy_graphics") || !Cvar_VariableValue("bdgn_modern_lighting_cpu") ||
+      atoi(Cvar_VariableString("bdgn_gl_version"))<2) return false;
+  return tier->hdset[0]!=5 || FS_HDTexSetAvailable(5);
+ }
 	if (tier->hdset[0]==5 && (!FS_HDTexSetAvailable(5) || !Cvar_VariableValue("bdgn_gl_dds_capable")))
 		return false;	/* BDGN 3.55w: Ultra High Fidelity - 4K needs the 4K set and S3TC */
 	needed=GL_VisualEffects(&tier->visual);
@@ -712,7 +725,7 @@ static void VID_BuildPresetCatalog( int s3v, int rend, int fx, int software )
 	if (!software) {
 		int fam = ( s3v ? PF_S3 : 0 ) | ( rend ? PF_REND : 0 ) | ( fx & ( PF_FX1 | PF_FX2 ) ) | ( VID_PowerVRSelected() && !s3v && !rend && !fx ? PF_PVR : 0 );
 		int r = s_ref_list[OPENGL_MENU].curvalue;
-		if (r==REF_OPENGL && r==s_ref_inuse)
+		if ((r==REF_OPENGL || r==REF_MT_OPENGL) && (s_ref_inuse==REF_OPENGL || s_ref_inuse==REF_MT_OPENGL))
 			for (i=0;i<(int)GL_VISUAL_PRESET_COUNT;i++)	/* BDGN 3.55i: Ultra and High Fidelity tiers the driver supports */
 				if (VID_FidelityPresetAvailable(GL_VisualPresetId(i))) {
 					s_all_list[n]=GL_FidelityPreset(GL_VisualPresetId(i))->visual.label;
@@ -1436,6 +1449,8 @@ static int PresetCvarWanted( const char *name )
 }
 
 static const char *preset_stock_defaults[][2] = {
+ {"gl_materials","0"}, {"gl_soft_particles","0"}, {"gl_smoke_lighting","0"}, {"gl_ssr","0"}, {"gl_ssgi","0"}, {"gl_volume_fog","0"}, {"gl_caustics","0"},
+
 		{ "cl_maxfps", "100" }, { "cl_particles", "1" }, { "cl_gun", "1" }, { "cl_footsteps", "1" },
 		{ "cl_predict", "1" }, { "cl_blend", "1" }, { "gl_polyblend", "1" }, { "gl_flashblend", "0" },
 		{ "gl_hdtextures", "0" }, { "gl_relief", "0" }, { "gl_sun", "0" }, { "gl_godrays", "0" },	/* 3.55al: on in MAX only (below) */
@@ -2259,6 +2274,8 @@ qboolean VID_ApplyPresetSettings(int id,qboolean archive)
 
 	if (tier) {
 		if (!VID_FidelityPresetAvailable(id)) return false;
+  if (BDGN_GLDriverIs(Cvar_VariableString("gl_driver"),"mtgl32"))
+   Com_Printf("SMP OpenGL: quality profile selected; unsupported wrapper effects use the original rendering path.\n");
 		id=5;
 	}
 
@@ -2400,7 +2417,8 @@ qboolean VID_ApplyPresetSettings(int id,qboolean archive)
 			{"gl_ext_multitexture","1"}, {"cl_maxfps","90"}, {"cl_async","0"},	/* 3.58o: no gl_swapinterval 1: vsync is always off (owner) */
 			{"cl_run","0"}, {"crosshair","0"},
 			{"s_musicsource","0"}, {"s_musicmode","0"},	/* CD audio */
-			{"gl_hdtextures","0"}, {"gl_anisotropy","1"}, {"fs_lowtextures","0"}, {"fs_lowsounds","0"},
+			{"cl_skybox","0"}, {"gl_sky_lighting","1"},
+   {"gl_hdtextures","0"}, {"gl_anisotropy","1"}, {"fs_lowtextures","0"}, {"fs_lowsounds","0"},
 			{"sw_asmspans","1"},	/* 3.21's software renderer was the x86 code */
 			{"fs_vanilla","1"},	/* 3.55al: only id's paks (pak0-pak2) are searched: no texture, sound or effect paks */
 			{"s_khz","11"}, {"cl_fxlevel","0"}, {"gl_shadows","0"},
@@ -2574,6 +2592,15 @@ qboolean VID_ApplyPresetSettings(int id,qboolean archive)
 			}
 		}
 	}
+	if (tier_id==83 && !Cvar_VariableValue("bdgn_legacy_graphics") && !Cvar_VariableValue("bdgn_lowram")) {
+  SetPresetValue("gl_materials",Cvar_VariableValue("bdgn_gl_materials_capable")?"1":"0");
+  SetPresetValue("gl_soft_particles",Cvar_VariableValue("bdgn_gl_soft_particles_capable")?"1":"0");
+  SetPresetValue("gl_smoke_lighting",Cvar_VariableValue("bdgn_gl_soft_particles_capable")?"1":"0");
+  SetPresetValue("gl_ssr",Cvar_VariableValue("bdgn_gl_environment_capable")?"2":"0");
+  SetPresetValue("gl_ssgi",Cvar_VariableValue("bdgn_gl_environment_capable")?"2":"0");
+  SetPresetValue("gl_volume_fog",Cvar_VariableValue("bdgn_gl_environment_capable")?"2":"0");
+  SetPresetValue("gl_caustics",Cvar_VariableValue("bdgn_gl_environment_capable")?"1":"0");
+ }
 	if (tier_id==83 && !Cvar_VariableValue("bdgn_legacy_graphics") && !Cvar_VariableValue("bdgn_lowram")) {
 		/* BDGN 3.56v: the best preset, Ultra High Fidelity - 4K, is the owner's own config.cfg of 2026-11-18 ("the
 		   best looking of them all") with 44 kHz sound, at the desktop resolution. The picture steps that need the

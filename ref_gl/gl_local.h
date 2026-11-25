@@ -338,6 +338,13 @@ extern int r_sun_valid;
 extern cvar_t *gl_sun;
 void R_SunInit (void);
 void R_SunSetSky (const char *skyname);
+int R_SkyLighting (vec3_t tint, float *gain);
+void GL_InitModernEffects(void);
+int GL_ModernNeedsCleanWorld(void);
+void GL_ModernOpaqueDepth(void);
+void GL_ModernEnvironment(void);
+void GL_ModernPuffBegin(int premultiplied);
+void GL_ModernPuffEnd(void);
 void R_SunCheck (void);
 void R_SunLoadMap (void);
 float R_SunShadowDirection (vec3_t origin, float *dx, float *dy);
@@ -474,6 +481,7 @@ void	GL_SetTexturePalette( unsigned palette[256] );
 
 void	GL_InitImages (void);
 void	GL_ShutdownImages (void);
+void GL_ReleaseOptionalSkyImage(image_t *image);
 
 void	GL_FreeUnusedImages (void);
 

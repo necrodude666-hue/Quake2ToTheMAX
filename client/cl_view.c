@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // cl_view.c -- player rendering positioning
 
 #include "client.h"
+#include "skybox_selection.h"
 #include "cl_strings.h"	/* BDGN 3.51ar: bounded copies of server strings */
 
 //=============
@@ -562,8 +563,7 @@ void CL_PrepRefresh (void)
 	char		mapname[MAX_QPATH];	/* BDGN 3.51ar: was 32, the map path can have 63 characters */
 	int			i;
 	char		name[MAX_QPATH];
-	float		rotate;
-	vec3_t		axis;
+
 
 	if (!cl.configstrings[CS_MODELS+1][0])
 		return;		// no map loaded
@@ -663,10 +663,7 @@ void CL_PrepRefresh (void)
 	// set sky textures and speed
 	Com_Printf ("sky\r", i); 
 	SCR_UpdateScreen ();
-	rotate = atof (cl.configstrings[CS_SKYROTATE]);
-	sscanf (cl.configstrings[CS_SKYAXIS], "%f %f %f", 
-		&axis[0], &axis[1], &axis[2]);
-	re.SetSky (cl.configstrings[CS_SKY], rotate, axis);
+	CL_ApplySelectedSky(true);
 	Com_Printf ("                                     \r");
 
 	// the renderer can now free unneeded stuff
@@ -952,6 +949,7 @@ void V_RenderView( float stereo_separation )
 	if (!cl.refresh_prepped)
 		return;			// still loading
 
+	CL_ApplySelectedSky(false);
 	if (cl_timedemo->value)
 	{
 		if (!cl.timedemo_start)

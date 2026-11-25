@@ -3,12 +3,14 @@
 #include "gl_local.h"
 #include "../client/render_scale.h"
 #include "gl_post_shader.h"
+#include "gl_pixel_legacy_shader.h"
 
 #define SCALE_TILE_LIMIT 64
 #define SCALE_MEMORY_LIMIT (48U*1024U*1024U)
 #define POST_MEMORY_LIMIT (80U*1024U*1024U)
 #define SCALE_TEX_BASE 640	/* BDGN 3.59k: below the 2D weapon/enemy names (768-927, gl_local.h), not above every image (5505+): 3dfx MiniGL */
 enum { SCALE_NATIVE, SCALE_COPY, SCALE_READBACK, SCALE_FBO, SCALE_PIXEL_COPY };
+static GLint post_sky_rg,post_sky_bl;
 static cvar_t *post_fxaa,*post_bloom,*post_ssao,*post_tonemap,*post_grade,*post_brightness;
 static int post_available,post_frame,post_reported,post_target_request,post_rejected_request;
 static GLuint post_program,post_depth_texture,pixel_light_program;
@@ -16,7 +18,7 @@ static cvar_t *pixel_lighting,*pixel_bump,*pixel_models;
 /* BDGN 3.55h: up to PIXEL_MAX_LIGHTS dynamic lights per pixel, with surface normals, on world surfaces and models */
 #define PIXEL_MAX_LIGHTS 4
 static GLint pixel_pos_loc[PIXEL_MAX_LIGHTS],pixel_col_loc[PIXEL_MAX_LIGHTS],pixel_sampler,pixel_texel,pixel_bump_loc;
-static GLint pixel_height_lod,pixel_source_texel;
+static GLint pixel_height_lod,pixel_source_texel,pixel_material,pixel_pbr;
 static void (APIENTRY *pixel_uniform4f)(GLint,GLfloat,GLfloat,GLfloat,GLfloat);
 static void (APIENTRY *pixel_uniform1f)(GLint,GLfloat);
 static void (APIENTRY *pixel_texcoord3)(GLenum,GLfloat,GLfloat,GLfloat);
@@ -301,6 +303,9 @@ static GLuint ScaleCompileShader(const char *source,const char *vertex)
 #endif
 }
 
+static void ScaleClearErrors(void);
+#include "gl_modern_fx.h"
+
 static void GL_InitRelief(void);
 static void GL_InitGodRays(void);
 void GL_InitPixelLighting(void)
@@ -311,12 +316,16 @@ void GL_InitPixelLighting(void)
     The relief is taken from the texture's own brightness in the texture's s/t directions. */
  static const char *source=
   "#version 110\n"
-  "uniform vec4 lightPos[4],lightCol[4]; uniform sampler2D baseTexture; uniform vec2 texel,sourceTexel; uniform float bump,heightLod;\n"
+  "uniform vec4 lightPos[4],lightCol[4]; uniform sampler2D baseTexture; uniform vec2 texel,sourceTexel; uniform float bump,heightLod; uniform vec2 material; uniform float usePBR;\n"
   "varying vec3 P,N,S,T;\n"
   "float lum(vec3 c){return dot(c,vec3(0.299,0.587,0.114));}\n"
   /* Colour noise in an HD replacement is not extra geometry. Filter height
      at the original material density, while colour keeps its normal LOD. */
   "float heightAt(vec2 uv,float bias){return lum(texture2D(baseTexture,uv,bias).rgb);}\n"
+  "vec3 brdf(vec3 base,vec3 n,vec3 l,vec3 v){vec3 h=normalize(l+v);float nl=max(dot(n,l),0.),nv=max(dot(n,v),.001),nh=max(dot(n,h),0.);"
+  "float rough=clamp(material.x,.08,1.),metal=clamp(material.y,0.,1.);float a=rough*rough;float a2=a*a;float den=nh*nh*(a2-1.)+1.;float D=a2/max(3.141593*den*den,.0001);"
+  "float k=(rough+1.)*(rough+1.)*.125;float G=nv/(nv*(1.-k)+k)*nl/(nl*(1.-k)+k);vec3 F0=mix(vec3(.04),base,metal);vec3 F=F0+(1.-F0)*pow(1.-max(dot(v,h),0.),5.);"
+  "vec3 spec=clamp(D*G*F/max(4.*nv*nl,.001),0.,2.);return ((1.-F)*(1.-metal)*base*.65+spec)*nl;}\n"
   "void main(){vec2 uv=gl_TexCoord[0].xy; vec4 base=texture2D(baseTexture,uv);"
   "vec3 g=normalize(N); vec3 n=g;"
   "if(bump>0.){"
@@ -330,8 +339,9 @@ void GL_InitPixelLighting(void)
   "for(int i=0;i<4;i++){vec3 d=lightPos[i].xyz-P; float len=length(d)+0.001; vec3 l=d/len;"
   "float a=clamp(1.-len*lightPos[i].w,0.,1.); a=a*a*(3.-2.*a);"
   "float face=step(0.,dot(g,l));"
-  "sum+=lightCol[i].rgb*a*face*(0.3+0.7*max(dot(n,l),0.));}"
-  "gl_FragColor=vec4(base.rgb*sum,0.);}";
+  "if(usePBR>0.)sum+=lightCol[i].rgb*a*face*brdf(base.rgb,n,l,normalize(-P));"
+  "else sum+=lightCol[i].rgb*a*face*(0.3+0.7*max(dot(n,l),0.));}"
+  "gl_FragColor=vec4(usePBR>0.?sum:base.rgb*sum,0.);}";
  static const char *vertex=
   "#version 110\n"
   "varying vec3 P,N,S,T;\n"
@@ -352,12 +362,15 @@ void GL_InitPixelLighting(void)
  GL_InitModernWater();
  if (!pixel_texcoord3) return;
  pixel_light_program=ScaleCompileShader(source,vertex);
+ if(!pixel_light_program) pixel_light_program=ScaleCompileShader(legacy_pixel_shader,vertex);
  if (!pixel_light_program) return;
  for (i=0;i<PIXEL_MAX_LIGHTS;i++) {
   char name[32];
   Com_sprintf(name,sizeof(name),"lightPos[%d]",i); pixel_pos_loc[i]=uniform_location(pixel_light_program,name);
   Com_sprintf(name,sizeof(name),"lightCol[%d]",i); pixel_col_loc[i]=uniform_location(pixel_light_program,name);
  }
+ pixel_material=uniform_location(pixel_light_program,"material");
+ pixel_pbr=uniform_location(pixel_light_program,"usePBR");
  pixel_sampler=uniform_location(pixel_light_program,"baseTexture");
  pixel_texel=uniform_location(pixel_light_program,"texel");
  pixel_height_lod=uniform_location(pixel_light_program,"heightLod");
@@ -734,6 +747,8 @@ static void PixelLightBegin(float scale,float bump)
  qglBlendFunc(GL_ONE,GL_ONE);
  use_program(pixel_light_program);
  post_uniform1i(pixel_sampler,0);
+ pixel_uniform1f(pixel_pbr,modern_pbr && modern_pbr->value?1.0f:0.0f);
+ uniform2f(pixel_material,.65f,0);
  pixel_uniform1f(pixel_bump_loc,bump);
  for (i=0;i<PIXEL_MAX_LIGHTS;i++) {
   if (i<pixel_count) {
@@ -791,6 +806,7 @@ void GL_DrawPixelLight(void)
   if (image!=bound) {
    int width,height,logical_width,logical_height,lod=0;
    GL_Bind(image->texnum);
+   if(modern_pbr && modern_pbr->value) { float rough,metal; ModernMaterial(image,&rough,&metal); uniform2f(pixel_material,rough,metal); }
    width=image->upload_width>0?image->upload_width:image->width;
    height=image->upload_height>0?image->upload_height:image->height;
    uniform2f(pixel_source_texel,1.0f/width,1.0f/height);
@@ -1178,6 +1194,7 @@ static void ScaleRelease(void)
 
 void GL_ScaleShutdown(void)
 {
+ ModernShutdown();
  if(scale_info_registered) {
   ri.Cmd_RemoveCommand("gl_scale_info");
   scale_info_registered=false;
@@ -1249,6 +1266,9 @@ static void PostInit(void)
    post_colour=uniform_location(post_program,"colourStyle");
    post_brightness_loc=uniform_location(post_program,"sceneBrightness");
    if (post_brightness_loc>=0) post_available|=POST_BRIGHTNESS;
+   post_sky_rg=uniform_location(post_program,"skyRG");
+   post_sky_bl=uniform_location(post_program,"skyBL");
+   if (gl_soft_shadow_capable && post_sky_rg>=0 && post_sky_bl>=0) post_available|=POST_SKY;
    SCALE_PROC(post_active_texture,"glActiveTexture","glActiveTextureARB");
    SCALE_PROC(post_uniform1i,"glUniform1i",NULL);
    if(post_active_texture && post_uniform1i && post_sampler>=0 &&
@@ -1260,6 +1280,7 @@ static void PostInit(void)
  }
 #endif
  ri.Cvar_SetValue("bdgn_gl_post_available",post_available);
+ ri.Cvar_SetValue("bdgn_gl_sky_capable",(post_available&POST_SKY)!=0);
 }
 
 void GL_ScaleInit(void)
@@ -1277,6 +1298,7 @@ void GL_ScaleInit(void)
   ri.Cvar_SetValue("gl_render_scale_capable",0);
   ri.Cvar_SetValue("gl_upscale_shader_capable",0);
   ri.Cvar_SetValue("bdgn_gl_post_available",0);
+  ri.Cvar_SetValue("bdgn_gl_sky_capable",0);
   ScaleReport(vid.width,vid.height,SCALE_NATIVE);
   return;
  }
@@ -1619,10 +1641,14 @@ qboolean GL_ScaleBegin(const refdef_t *view,refdef_t *scaled_view,float ui_scale
  post_frame=0;
  if(!copyformat && !pixelcopy) {
   if(post_fxaa->value) requested|=POST_FXAA;
+  if((modern_puff && (modern_soft->value || modern_smoke->value)) ||
+     (modern_screen && (modern_ssr->value || modern_gi->value || modern_fog->value ||
+       (modern_caustics->value && (view->rdflags&RDF_UNDERWATER))))) requested|=POST_MODERN;
   if(post_bloom->value) requested|=POST_BLOOM;
   if(post_ssao->value) requested|=POST_SSAO;
   if(post_tonemap->value>0) requested|=POST_TONEMAP;
   if(post_grade->value>0) requested|=POST_GRADE;
+  { vec3_t tint; float gain; if(R_SkyLighting(tint,&gain)) requested|=POST_SKY; }
   if((post_available&POST_BRIGHTNESS) && fabs(SceneGamma()-1.0f)>0.001f) requested|=POST_BRIGHTNESS;
   if(percent<100 && scale_filter->value==3) requested|=POST_ADAPTIVE;
  }
@@ -1781,6 +1807,11 @@ qboolean GL_ScalePresent(const refdef_t *scaled_view,const refdef_t *view,float 
  if(post_frame) {
   tile=&scale_tiles[0];
   use_program(post_program);
+  { vec3_t tint; float gain;
+    if ((post_frame&POST_SKY) && R_SkyLighting(tint,&gain)) {
+     uniform2f(post_sky_rg,tint[0],tint[1]); uniform2f(post_sky_bl,tint[2],gain);
+    } else { uniform2f(post_sky_rg,1,1); uniform2f(post_sky_bl,1,1); }
+  }
   uniform2f(post_step,tile->u/tile->w,tile->v/tile->h);
   uniform2f(post_end,tile->u,tile->v);
   uniform2f(post_effects,(post_frame&POST_FXAA)?1:0, (post_frame&POST_BLOOM)?(post_bloom->value>=2?.65f:.32f):0);

@@ -596,6 +596,7 @@ void CL_AddLightStyles (void);
 //=================================================
 
 void CL_PrepRefresh (void);
+int CL_SkyboxAvailable (void);
 void CL_LoadPhaseBegin (void);
 void CL_LoadPhaseAbort (void);	/* BDGN 3.59f: cl_view.c, map load phases */
 extern int cl_load_cm_ms, cl_load_snd_ms;

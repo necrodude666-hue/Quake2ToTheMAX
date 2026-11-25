@@ -367,6 +367,7 @@ typedef struct { int setting, choice; char label[128]; } benchcase_t;
 static benchcase_t bench_cases[BENCH_MAX_CASES];
 static int bench_case_count, bench_next, bench_cur=-1, bench_repeat, bench_phase;
 static qboolean bench_count_only;
+static int bench_modern;
 static int bench_launch_ms, bench_file_serial, bench_nvars;
 static double bench_fps[BENCH_MAX_CASES][BENCH_REPEATS];
 static int bench_done[BENCH_MAX_CASES][BENCH_REPEATS];
@@ -834,7 +835,7 @@ static void CL_BenchFinish (const char *reason)
  double sum,min,max;
  if(!bench_phase) return;
  BenchResumeClear();	/* BDGN 3.59g */
- bench_phase=0; bench_cur=-1;
+ bench_phase=0; bench_cur=-1; bench_modern=0;
  Cvar_SetValue("bdgn_bench_active",0); Cvar_SetValue("bdgn_bench_eof",0);
  BenchReloadCapture();
  BenchRestore(); CL_CheckFullbright();
@@ -932,6 +933,7 @@ static void BenchAddCase (int setting,int choice,const char *label)
  Com_sprintf(c->label,sizeof(c->label),"%s",label);
 }
 static int bench_category_count;
+#include "bench_modern.h"
 
 
 static void BenchAddAudioCases (void)
@@ -959,6 +961,7 @@ static void BenchBuildCases (void)
  static const char *preset_labels[]={NULL,"PRESET / Fast","PRESET / Faster","PRESET / Ultra Fast",
   "PRESET / Default","PRESET / MAX Fidelity","PRESET / PSYCHO Fast"};
  bench_case_count=0;bench_category_count=0;
+ if(bench_modern) { ModernBenchBuild(); return; }
  if(Cvar_VariableValue("bdgn_extra_lowram") && !Q_stricmp(Cvar_VariableString("vid_ref"),"soft")) {
   BenchAddCase(-9,71,"PRESET / lowerThen32mb");
  }
@@ -1046,6 +1049,7 @@ static qboolean BenchApplyCaseBody (int id)
  int i,software_smp;
  BenchRestore();
  bench_shadow_case=false;
+ if(c->setting==BENCH_MODERN) { ModernBenchApply(c->choice); return true; }
  software_smp=(int)Cvar_VariableValue("sw_smp");
  Cvar_SetValue("s_gl_audio_worker",0);
  Cvar_SetValue("bdgn_no3dnow",0);
@@ -1315,11 +1319,15 @@ static void CL_Bench_f (void)
 
 #endif
 
+ bench_modern=!strcmp(Cmd_Argv(0),"bdgn_bench_modern");
+ if(bench_modern && (!Cvar_VariableValue("bdgn_gl_environment_capable") || Q_stricmp(Cvar_VariableString("vid_ref"),"gl"))) {
+  Com_Printf("Modern graphics benchmark requires a compatible native OpenGL driver.\n"); bench_modern=0; return;
+ }
  bench_smp_presets=BenchCurrentSmp();
 
  bench_repeats=3;
  if(Cmd_Argc()>2 || !BenchDemoValid(demo)) {Com_Printf("usage: bdgn_bench [demo1.dm2]\n");return;}
- if((!FS_LowPackAvailable(true) || !FS_LowPackAvailable(false))) {
+ if(!bench_modern && (!FS_LowPackAvailable(true) || !FS_LowPackAvailable(false))) {
   Com_Printf("bdgn_bench requires lowtex-small.pak and pak7-lowsounds.pak in the loaded game search path. Restart the game after installing them.\n");return;
  }
  Com_sprintf(bench_demo,sizeof(bench_demo),"%s",demo);
@@ -1351,9 +1359,9 @@ static void CL_Bench_f (void)
  fprintf(bench_log,"type\tcase\trepeat\tvariable_or_case\tvalue\tfps\tmean\tmin\tmax\tnote\n");
  BenchNote("VERSION",BDGN_VERSION_STRING);
  BenchNote("PERMANENT_FAST_EFFECTS","on; independent of CPU and preset");
- BenchNote("BENCH_PROFILE",bench_smp_presets?"SMP presets only":"presets and audio");
+ BenchNote("BENCH_PROFILE",bench_modern?"modern graphics, skies, isolated cases and combinations":bench_smp_presets?"SMP presets only":"presets and audio");
  BenchNote("BENCH_TYPE","standard: 3 runs per case");
- BenchNote("NOTE","Focused mode tests individual changes, two bundles and five presets. Set bdgn_bench_full 1 for the diagnostic sweep.");BenchNote("DEMO",bench_demo);
+ BenchNote("NOTE",bench_modern?"Current output mode retained. Caustics need an underwater demo; smoke needs visible puffs; reflections need visible reflective materials. Cases with no relevant content can measure only overhead.":"The presets on the active renderer, with audio cases when applicable.");BenchNote("DEMO",bench_demo);
  VID_GetRealSize(&real_width,&real_height);
  Com_sprintf(info,sizeof(info),"%i x %i",real_width,real_height);BenchNote("RESOLUTION",info);
  BenchNote("MACHINE_LABEL",Cvar_VariableString("bdgn_bench_label"));
@@ -3835,6 +3843,7 @@ void CL_InitLocal (void)
 	Cmd_AddCommand ("bdgn_spritecheck", CL_SpriteCheck_f);	/* BDGN 3.51q */
 	Cmd_AddCommand ("bdgn_vramcheck", CL_VramCheck_f);	/* BDGN 3.59u */
 	Cmd_AddCommand ("bdgn_bench", CL_Bench_f);
+ Cmd_AddCommand("bdgn_bench_modern",CL_Bench_f);
 	/* BDGN 3.60c (owner 2026-11-22): the release keeps one benchmark, bdgn_bench_presets (menu "Quick: my presets"); the
 	   diagnostic and machine benchmarks (Pa1983, Chromatic, Lupusrex, K6-3 Special, CRASH HUNT, SMP, audio, 3dfx ...) are gone */
 	Cmd_AddCommand ("bdgn_bench_presets", CL_BenchPresets_f);

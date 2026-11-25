@@ -1,5 +1,36 @@
 # Changelog
 
+## Optional modern effects and sci-fi skies - 25 November 2026
+
+Ten new **sky-only** environments are provided in `Q2TTM_SciFi_Skies.zip`: Ferrum orbit, Crimson nebula, Azure rift, Violet dusk, Golden dawn, Ringworld day, Aurora night, Orbital shipyard, Deep-space fleet and Eclipse. There is no terrain beneath the viewer. All six faces of each environment come from one spherical source and share matching edge samples. The game images are 1024 x 1024 per face; the generated panoramas are not described as native 4K art.
+
+Extract the optional ZIP into the game folder. Its files belong in `baseq2/env/q2ttm_skies/`. The installer can also install it when the ZIP is beside Setup or in the selected optional-pack folder. `BUILD_TEXTURE_ZIPS.bat` can repack a complete installed sky set as a stored ZIP. The core installer excludes that folder. Only the selected six sides load; the previous optional sky textures are released after each live change; an incomplete set falls back to the complete original map sky. This is client-side and leaves server sky/configstrings, maps and protocol 34 unchanged.
+
+**Video -> lighting & shadows -> Sky & atmosphere** selects the sky and its lighting. `cl_skybox 0` is **standard: original sky and original lighting**. Values 1-10 select the new environments in the order above. `gl_sky_lighting 1` applies each new sky's restrained scene brightness/tint; `0` keeps original scene lighting. The multipliers range from 0.76 (night) to 1.18 (day), with a mild colour tint. This is an artistic exposure adjustment over the existing baked lighting, not a rebake of the map. HUD and menu colours stay unchanged. The selected environment also supplies a direction/colour from a bright sun, moon, corona or nebula feature for the existing `gl_sun` and `gl_godrays` effects. Those effects retain their own switches and visibility/occlusion checks.
+
+The following optional effects are off in the default configuration:
+
+| Menu | Cvar / values | Behaviour |
+| --- | --- | --- |
+| Lighting & shadows | `gl_materials` 0/1 | GGX dynamic-light response using roughness and metallic weight; existing baked light remains. Requires per-pixel lighting for a visible response. |
+| Lighting & shadows | `gl_ssgi` 0/1/2 | Spatial screen-space indirect light, 8/16 samples; no temporal history. |
+| Lighting & shadows | `gl_volume_fog` 0/1/2 | Thin world-anchored fog with 8/16 bounded scattering samples and up to four dynamic lights. Opacity is capped at 22%. |
+| Effects & water, below 3D smoke | `gl_soft_particles` 0/1 | Depth fading of modern smoke puffs at opaque walls, floors and models. Does not replace vanilla particles. |
+| Effects & water, below 3D smoke | `gl_smoke_lighting` 0/1 | Coloured dynamic light over the retained neutral smoke lighting. |
+| Effects & water, picture effects | `gl_ssr` 0/1/2 | Screen-space reflections on reflective world materials, up to 16/32 ray steps. Off-screen/missed reflections retain the original surface colour. |
+| Effects & water, water | `gl_caustics` 0/1 | Animated, world-anchored procedural caustic light while the viewer is underwater. |
+
+Materials default to matte. Names containing metal, pipe or grate get a conservative metal profile. Optional `baseq2/materials/<texture path>.pbr` files override it: for `textures/e1u1/metal2_1.wal`, create `materials/e1u1/metal2_1.pbr` containing two numbers, e.g. `0.35 0.80` (roughness, metallic weight). Roughness is clamped to 0.08-1 and metallic weight to 0-1. This does not claim that colour textures contain authored PBR maps or normal maps. Metadata is cached per registered image and allocated only when used.
+
+CPU/low-memory checks precede new GL work. Legacy machines do not probe these shaders, load the sky pack or allocate their buffers. Eligible native OpenGL must pass actual shader linking and depth/FBO checks; the menu hides unavailable effects. Buffers are allocated lazily and bounded to 96 MiB for the new environment passes; allocation failure retains the original rendering path. The original pixel-light shader is retained as a fallback if a driver rejects the extended shader. View weapons are drawn after the environment/soft-smoke pass so their depth and shape are excluded from it. The compatible MAX Fidelity 4K preset enables all seven options, with high quality where available. Standard resets them to off and the sky to the map's own.
+
+**SMP OpenGL presets:** the hard-coded menu restriction to the non-SMP driver is removed. On a modern CPU using MTGL with the system `opengl32` backend, the same Ultra/High Fidelity quality profiles can be selected, including the 4K profile when its pack is present. This is profile availability, not a claim that the legacy MTGL wrapper implements GLSL/FBO calls. Individual effects keep the active backend's real capabilities and fall back safely where MTGL cannot execute them. No worker-owned GL function pointer is called from the main thread. MiniGL, Glide, WickedGL, Software and legacy CPU restrictions remain separate.
+
+**Video -> benchmarks -> Modern graphics + skies**, or `bdgn_bench_modern [demo1.dm2]`, measures individual new effects off/on/quality, installed skies and two combined cases. With all options and skies available there are 31 cases, three runs each. It retains the output resolution, window size and configured render scale, writes the normal TSV log and restores the saved settings after completion/cancellation. Start from a textured modern configuration. Use a combat demo with modern smoke, reflective surfaces and underwater sections to measure the relevant content; a case with none of that content measures overhead only. Preset benchmarking remains available alongside it.
+
+Validation of this source change: eleven changed C translation units passed a 32-bit TinyCC compile check; all new and modified shader programs compiled and linked on GeForce RTX 5060 / NVIDIA 616.64. GPU draw checks covered neutral standard light, dark/day exposure, exact standard restoration, soft-smoke depth fading and matte reflection rejection. Native regressions passed 40 sky-selection checks, 34 OpenGL/SMP preset checks and five early CPU/driver guard checks. All 60 sky faces passed shared-edge checks. These are targeted code/GPU checks; they do not measure complete-game FPS or replace the owner's normal VS2005 Release/Release_SSE build and gameplay review.
+
+
 ## Historical foundation: BDGN 3.28
 
 The recovered original patch notes document cinematic and weapon-hand options, 8/44 kHz audio, OpenGL texture simplification, 2.4x zoom, WASD/freelook defaults and SMP OpenGL as part of **BDGN 3.28 by Nitton Attiofyra**, before the later Quake2ToTheMAX development. [Read the historical notes, cvars and period SMP results](HISTORY_3.28.md). This corrects the previously incomplete early history; it does not claim these as new 3.60i features.

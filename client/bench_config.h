@@ -12,9 +12,18 @@
 #include "bench_smp.h"
 typedef struct {
  const char *name,*category,*reference,*on;
- int flags,count; const char *values[10];
+ int flags,count; const char *values[12];
 } benchcfg_t;
 static const benchcfg_t bench_cfg[]={
+ {"gl_materials","LIGHTING","0",NULL,BC_GL|BC_CURRENT,2,{"0","1"}},
+ {"gl_soft_particles","WEAPON EFFECTS","0",NULL,BC_GL|BC_CURRENT,2,{"0","1"}},
+ {"gl_smoke_lighting","WEAPON EFFECTS","0",NULL,BC_GL|BC_CURRENT,2,{"0","1"}},
+ {"gl_ssr","PICTURE EFFECTS","0",NULL,BC_GL|BC_CURRENT,3,{"0","1","2"}},
+ {"gl_ssgi","LIGHTING","0",NULL,BC_GL|BC_CURRENT,3,{"0","1","2"}},
+ {"gl_volume_fog","LIGHTING","0",NULL,BC_GL|BC_CURRENT,3,{"0","1","2"}},
+ {"gl_caustics","WATER","0",NULL,BC_GL|BC_CURRENT,2,{"0","1"}},
+ {"cl_skybox","SKY & ATMOSPHERE","0",NULL,BC_GL|BC_CURRENT,11,{"0","1","2","3","4","5","6","7","8","9","10"}},
+ {"gl_sky_lighting","SKY & ATMOSPHERE","1",NULL,BC_GL|BC_CURRENT,2,{"1","0"}},
  { "gl_pixel_lighting","LIGHTING","0",NULL,BC_GL|BC_CURRENT,4,{"0","1","2","4"} },	/* BDGN 3.55h: lights per pixel */
  { "gl_pixel_bump","LIGHTING","1",NULL,BC_GL|BC_CURRENT,2,{"1","0"} },
  { "gl_shadows","LIGHTING","0",NULL,BC_GL|BC_CURRENT,4,{"0","1","2","3"} },
@@ -155,6 +164,14 @@ static const char *BenchCfgSkipReason (int i)
 }
 static int BenchCfgAllowed (int i)
 {
+ if(!strcmp(bench_cfg[i].name,"gl_materials")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_materials_capable")!=0;
+ if(!strcmp(bench_cfg[i].name,"gl_soft_particles")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_soft_particles_capable")!=0;
+ if(!strcmp(bench_cfg[i].name,"gl_smoke_lighting")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_soft_particles_capable")!=0;
+ if(!strcmp(bench_cfg[i].name,"gl_ssr")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if(!strcmp(bench_cfg[i].name,"gl_ssgi")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if(!strcmp(bench_cfg[i].name,"gl_volume_fog")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if(!strcmp(bench_cfg[i].name,"gl_caustics")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if (!strcmp(bench_cfg[i].name,"cl_skybox") || !strcmp(bench_cfg[i].name,"gl_sky_lighting")) return CL_SkyboxAvailable();
  if (!strcmp(bench_cfg[i].name,"gl_pixel_lighting") || !strcmp(bench_cfg[i].name,"gl_pixel_bump"))
   return Cvar_VariableValue("bdgn_gl_pixel_lighting_capable")!=0;
  if (!strcmp(bench_cfg[i].name,"cl_hdfx"))

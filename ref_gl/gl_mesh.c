@@ -1439,6 +1439,7 @@ static qboolean R_DrawFXModel (entity_t *e)
 		}
 		qsort (order, m, sizeof(order[0]), R_FXOrderCompare);
 		qglBlendFunc (straight_alpha?GL_SRC_ALPHA:GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  GL_ModernPuffBegin(!straight_alpha);
 		qglBegin (GL_QUADS);
 		for (k = 0; k < m; k++)
 		{
@@ -1464,6 +1465,7 @@ static qboolean R_DrawFXModel (entity_t *e)
 			qglTexCoord2f (u1, v1); qglVertex3fv (q);
 		}
 		qglEnd ();
+  GL_ModernPuffEnd();
 		c_alias_polys += m * 2;
 	}
 	else

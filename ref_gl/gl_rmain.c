@@ -514,7 +514,7 @@ void R_DrawEntitiesOnList (void)
 {
 	int		i, j, nsorted = 0;
 	entity_t	*sorted[MAX_ENTITIES], *e;
-	int deferred=GL_DistortWorldEnabled()?(RF_WEAPONMODEL|RF_DEPTHHACK):0;
+	int deferred=(GL_DistortWorldEnabled() || GL_ModernNeedsCleanWorld())?(RF_WEAPONMODEL|RF_DEPTHHACK):0;
 
 	if (!r_drawentities->value)
 		return;
@@ -588,6 +588,8 @@ void R_DrawEntitiesOnList (void)
 
 	R_ShadowVolumeDraw ();	/* BDGN 3.55ai: shadow volumes of the solid models, before the translucent ones */
 
+ GL_ModernOpaqueDepth();
+
 	/* Smoke sits behind the translucent BFG explosion even when their models sort differently. */
 	qglDepthMask(0);
 	for (i=0;i<r_newrefdef.num_entities;i++)
@@ -657,7 +659,7 @@ void R_DrawEntitiesOnList (void)
 static void R_DrawViewWeaponAfterDistortion(void)
 {
  int i, pass;
- if (!GL_DistortWorldEnabled() || !r_drawentities->value) return;
+ if ((!GL_DistortWorldEnabled() && !GL_ModernNeedsCleanWorld()) || !r_drawentities->value) return;
  for (pass=0;pass<2;pass++) {
   qglDepthMask(!pass);
   for (i=0;i<r_newrefdef.num_entities;i++) {
@@ -1350,6 +1352,7 @@ void R_RenderView (refdef_t *fd)
 	BDGN_PROF_CALL( PROF_ALPHA, R_DrawAlphaSurfaces () );
 
 	BDGN_PROF_CALL( PROF_POST, GL_DrawDistortion () );	/* BDGN 3.55t: heat distortion */
+ GL_ModernEnvironment();
 	R_DrawViewWeaponAfterDistortion();
 	BDGN_PROF_CALL( PROF_POST, GL_DrawGodRays () );	/* BDGN 3.55ak: light shafts from the sun */
 
@@ -2083,6 +2086,7 @@ qboolean R_Init( void *hinstance, void *hWnd )
 	t_shaders = Sys_Milliseconds ();
 	GL_ScaleInit();
 	GL_InitPixelLighting();
+ GL_InitModernEffects();
 	GL_InitDistortion();	/* BDGN 3.55t */
 	ri.Vid_MenuInit();
 	{	/* BDGN 3.57h: where the start of the renderer goes (bdgn_startup.txt has it as one line) */

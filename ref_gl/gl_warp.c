@@ -777,8 +777,10 @@ static void R_SkyAverage (void)
 char	*suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
 void R_SetSky (char *name, float rotate, vec3_t axis)
 {
-	int		i;
+	int		i,j;
+ image_t *previous[6];
 	char	pathname[MAX_QPATH];
+ memcpy(previous,sky_images,sizeof(previous));
 
 	strncpy (skyname, name, sizeof(skyname)-1);
 	skyrotate = rotate;
@@ -790,7 +792,7 @@ void R_SetSky (char *name, float rotate, vec3_t axis)
 		if (gl_skymip->value || skyrotate)
 			gl_picmip->value++;
 
-		if ( qglColorTableEXT && gl_ext_palettedtexture->value )
+		if ( qglColorTableEXT && gl_ext_palettedtexture->value && strncmp(skyname,"q2ttm_skies/",12) )
 			Com_sprintf (pathname, sizeof(pathname), "env/%s%s.pcx", skyname, suf[i]);
 		else
 			Com_sprintf (pathname, sizeof(pathname), "env/%s%s.tga", skyname, suf[i]);
@@ -852,6 +854,10 @@ void R_SetSky (char *name, float rotate, vec3_t axis)
 		}
 	}
 
+ for(i=0;i<6;i++) {
+  for(j=0;j<6;j++) if(previous[i]==sky_images[j]) break;
+  if(j==6) GL_ReleaseOptionalSkyImage(previous[i]);
+ }
 	R_SkyAverage ();
 	R_SunSetSky (skyname);	/* BDGN 3.55ak: find the sun in the sky pictures */
 }

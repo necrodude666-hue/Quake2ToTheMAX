@@ -2246,6 +2246,7 @@ SPEED & NETWORK MENU (BDGN 3.37)
 #include "tweak_settings.h"
 #include "../qcommon/q3e_3dnow.h"
 const bdgn_tweak_t bdgn_tweaks[] = {
+
  { "DRAW PATHS","model batching","gl_fastdraw","gl_modelbatch_auto","0",4,5,{0,0,1,2,3},1,4,4,1,1,{"auto (3DNow!)","off","triangles","strips/fans","strips + byte",NULL} },
  { "DRAW PATHS","particle batching","gl_fastparticles","gl_particlebatch_auto","0",4,3,{0,0,1},1,2,2,1,2,{"auto (3DNow!)","off","on",NULL} },
  { "DRAW PATHS","world batching","gl_batchworld",NULL,"0",4,2,{0,1},0,1,1,1,0,{"off","on",NULL} },
@@ -2264,6 +2265,9 @@ const bdgn_tweak_t bdgn_tweaks[] = {
  { "SIMPLER LIGHTING","grey light maps (software)","sw_test_gray_lightmaps",NULL,"0",6,2,{0,1},0,0,0,TK_RESTART|TK_MENUONLY,0,{"off","on",NULL} },	/* 3.60c: was on the TEST Low End page; TK_MENUONLY keeps it out of presets, defaults and the benchmark, as page 3 was */
  { "LIGHTING","per-pixel lighting","gl_pixel_lighting",NULL,"0",0,4,{0,1,2,4},0,0,0,TK_GL|TK_MENUONLY,0,{"off","1 light","2 lights","4 lights",NULL} },	/* BDGN 3.55i: moved from the Video page; shown only with renderer support */
  { "LIGHTING","surface relief","gl_pixel_bump",NULL,"1",0,2,{0,1},1,1,1,TK_GL|TK_MENUONLY,0,{"off","on",NULL} },
+ {"LIGHTING","material lighting","gl_materials",NULL,"0",0,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","on",NULL}},
+ {"LIGHTING","indirect light (screen)","gl_ssgi",NULL,"0",0,3,{0,1,2},0,0,0,TK_GL|TK_MENUONLY,0,{"off","low","high",NULL}},
+ {"LIGHTING","volumetric fog","gl_volume_fog",NULL,"0",0,3,{0,1,2},0,0,0,TK_GL|TK_MENUONLY,0,{"off","low","high",NULL}},
  { "SIMPLER WORLD","single colour textures","r_drawflat",NULL,"0",6,4,{0,2,3,1},0,1,1,1,0,{"off","material colours","grayscale","random colours",NULL} },
  { "SIMPLER WORLD","simple sky","gl_fastsky",NULL,"0",6,2,{0,1},0,1,1,1,0,{"off","on",NULL} },
  { "SIMPLER WORLD","compact walls (software, extra low textures)","sw_test_compact_walls",NULL,"0",6,2,{0,1},0,0,0,TK_RESTART|TK_MENUONLY,0,{"off","on",NULL} },	/* 3.60c: was on the TEST Low End page; TK_MENUONLY keeps it out of presets, defaults and the benchmark, as page 3 was */
@@ -2318,6 +2322,8 @@ const bdgn_tweak_t bdgn_tweaks[] = {
  { "WEAPON EFFECTS","3D railgun colours","cl_3drail_colors",NULL,"0",1,10,{0,1,2,3,4,5,6,7,8,9},0,0,0,TK_GL|TK_MENUONLY,0,{"red / blue orange green","red / yellow","green / red","blue / yellow","yellow / purple","purple / green","cyan / magenta","white / blue","orange / cyan","white / rainbow",NULL} },
  { "WEAPON EFFECTS","3D gibs and blood","cl_hdgibs",NULL,"0",1,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","on",NULL} },
  { "WEAPON EFFECTS","3D smoke","cl_hdsmoke",NULL,"0",1,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","on",NULL} },
+ {"WEAPON EFFECTS","soft smoke intersections","gl_soft_particles",NULL,"0",1,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","on",NULL}},
+ {"WEAPON EFFECTS","coloured smoke lighting","gl_smoke_lighting",NULL,"0",1,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","on",NULL}},
  /* BDGN 3.56y: how much smoke rises from lava with 3D smoke on (client/cl_fx3d.c FX_LavaSmoke) */
  { "WEAPON EFFECTS","lava smoke","cl_lavasmoke",NULL,"3",1,8,{1,2,3,4,5,6,8,10},2,2,2,TK_GL|TK_MENUONLY,0,{"1x","2x","3x","4x","5x","6x","8x","10x",NULL} },
  /* BDGN 3.56z: lava spouts up out of the pools, with a ring on the lava (client/cl_fx3d.c FX_LavaBursts) */
@@ -2334,11 +2340,13 @@ const bdgn_tweak_t bdgn_tweaks[] = {
  { "PICTURE EFFECTS","3D surface structure","gl_relief",NULL,"0",1,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","on",NULL} },	/* BDGN 3.55ah: relief from the loaded texture set (gl_render_scale.c GL_DrawRelief) */
  { "PICTURE EFFECTS","bloom","gl_bloom",NULL,"0",1,3,{0,1,2},0,0,0,TK_GL|TK_MENUONLY,0,{"off","low","high",NULL} },	/* BDGN 3.55i: moved from the Video page */
  { "PICTURE EFFECTS","ambient occlusion","gl_ssao",NULL,"0",1,3,{0,1,2},0,0,0,TK_GL|TK_MENUONLY,0,{"off","low","high",NULL} },
+ {"PICTURE EFFECTS","screen-space reflections","gl_ssr",NULL,"0",1,3,{0,1,2},0,0,0,TK_GL|TK_MENUONLY,0,{"off","low","high",NULL}},
  { "PICTURE EFFECTS","tone mapping","gl_tonemap",NULL,"0",1,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","filmic",NULL} },
  { "PICTURE EFFECTS","colour grading","gl_colour_grade",NULL,"0",1,3,{0,1,2},0,0,0,TK_GL|TK_MENUONLY,0,{"off","warm","cool",NULL} },
  { "WATER","modern water","gl_water_surface",NULL,"0",1,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","waves",NULL} },
  { "WATER","water ripples / splashes","gl_water_interaction",NULL,"0",1,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","on",NULL} },
  { "WATER","water reflections","gl_water_reflect",NULL,"0",1,3,{0,1,2},0,0,0,TK_GL|TK_MENUONLY,0,{"off","half size","full size",NULL} },	/* BDGN 3.55o */
+ {"WATER","underwater caustics","gl_caustics",NULL,"0",1,2,{0,1},0,0,0,TK_GL|TK_MENUONLY,0,{"off","on",NULL}},
  { "SIMPLER EFFECTS","blood / bullet hits","cl_bloodfx","cl_impactfx","0",6,4,{0,1,2,3},0,2,2,0,3,{"on","reduced","off","transparent ball",NULL} },	/* BDGN 3.51ag: names say what is shown (0 = on/original, 2 = off/removed) */
  { "SIMPLER EFFECTS","simple explosions","cl_static_rockets","cl_static_bfg","0",6,3,{0,1,2},0,1,1,0,3,{"off","on","classic 2d",NULL} },	/* BDGN 3.51v: rockets, grenades, BFG; 2 = sprites/bdgn_fx; 3.51w: also blaster bolts and hits (cl_simpleblaster, BDGN_TweakSet) */
  { "SIMPLER EFFECTS","simple railgun","cl_simple_rail",NULL,"0",6,2,{0,1},0,1,1,0,0,{"off","on",NULL} },	/* BDGN 3.51w: the blaster moved to "simple explosions" */
@@ -2381,6 +2389,8 @@ const bdgn_tweak_t bdgn_tweaks[] = {
  /* BDGN 3.57d: sun and god rays make the game look better: on the lighting page (Video -> BETTER LOOKING) */
  { "SUN & GOD RAYS","sun and lamp shadows","gl_sun",NULL,"0",0,2,{0,1},0,0,0,0,0,{"off","on",NULL} },	/* BDGN 3.55ak: gl_sun.c; with gl_shadows 3 or 4 */
  { "SUN & GOD RAYS","god rays","gl_godrays",NULL,"0",0,3,{0,1,2},0,0,0,0,0,{"off","soft","strong",NULL} },	/* BDGN 3.55ak: gl_render_scale.c GL_DrawGodRays */
+ { "SKY & ATMOSPHERE","skybox","cl_skybox",NULL,"0",0,11,{0,1,2,3,4,5,6,7,8,9,10},0,0,0,TK_MENUONLY,0,{"standard (map)","Ferrum orbit","Crimson nebula","Azure rift","Violet dusk","Golden dawn","Ringworld day","Aurora night","Orbital shipyard","Deep-space fleet","Eclipse",NULL} },
+ { "SKY & ATMOSPHERE","skybox lighting","gl_sky_lighting",NULL,"1",0,2,{0,1},1,1,1,TK_MENUONLY,0,{"original","match skybox",NULL} },
  /* BDGN 3.55ai: Video -> "advanced..." (3.60c: was "testing..."): loading, console, online, server, low spec models */
  { "SOFTWARE","window upscale (render scale)","sw_upscale",NULL,"1",5,3,{0,1,2},1,1,1,0,0,{"Windows","BDGN odd steps","BDGN always",NULL} },	/* BDGN 3.58b */
  { "LOW SPEC MODELS","simpler 3D models","cl_simplemodels",NULL,"0",5,4,{0,1,2,3},0,3,1,TK_RESTART,0,{"off","simple","simpler","simplest",NULL} },	/* BDGN 3.57l: bdgn_simplemodels.pak, qcommon/files.c FS_LoadFile */
@@ -2415,6 +2425,9 @@ void BDGN_TweakDefaults (void)
  if (Cvar_VariableValue("cl_retromode")) BDGN_RetroModeSet(0);	/* BDGN 3.58w */
  Cvar_SetValue("cl_weaponlights",1);
  Cvar_SetValue("cl_lowend_sprites",0);
+ Cvar_SetValue("cl_skybox",0); Cvar_SetValue("gl_sky_lighting",1);
+ Cvar_SetValue("gl_materials",0); Cvar_SetValue("gl_soft_particles",0); Cvar_SetValue("gl_smoke_lighting",0); Cvar_SetValue("gl_ssr",0); Cvar_SetValue("gl_ssgi",0); Cvar_SetValue("gl_volume_fog",0); Cvar_SetValue("gl_caustics",0);
+
  for(i=0;i<bdgn_tweak_count;i++) {
   if (bdgn_tweaks[i].flags&TK_MENUONLY) continue;
   Cvar_Set((char *)bdgn_tweaks[i].cvar,(char *)bdgn_tweaks[i].default_value);
@@ -2456,6 +2469,14 @@ int BDGN_TweakVisible (int index)
  const bdgn_tweak_t *t=&bdgn_tweaks[index];
  int post=(int)Cvar_VariableValue("bdgn_gl_post_available");
  if (t->menu<0) return 0;
+ if(!strcmp(t->cvar,"gl_materials")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_materials_capable")!=0;
+ if(!strcmp(t->cvar,"gl_soft_particles")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_soft_particles_capable")!=0;
+ if(!strcmp(t->cvar,"gl_smoke_lighting")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_soft_particles_capable")!=0;
+ if(!strcmp(t->cvar,"gl_ssr")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if(!strcmp(t->cvar,"gl_ssgi")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if(!strcmp(t->cvar,"gl_volume_fog")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if(!strcmp(t->cvar,"gl_caustics")) return !Q_stricmp(Cvar_VariableString("vid_ref"),"gl") && Cvar_VariableValue("bdgn_gl_environment_capable")!=0;
+ if (!strcmp(t->cvar,"cl_skybox") || !strcmp(t->cvar,"gl_sky_lighting")) return CL_SkyboxAvailable();
  if ((t->flags & TK_GL) && !BDGN_RendererSupports(t->cvar)) return 0;
  if (!strcmp(t->cvar,"in_rawmouse")) return Cvar_VariableValue("in_rawmouse_available") != 0;	/* 3.59z: Windows XP and later */
  if (!strcmp(t->cvar,"con_timestamps") || !strcmp(t->cvar,"cl_chatfilter")) return 1;
@@ -2850,6 +2871,15 @@ static void TweaksEnemyMenu(void *unused) { TweaksOpen(2); }
 static const char *s_tweak_notes[][2] = {
  /* better looking */
  {"gl_shadows","shadows under models"}, {"gl_pixel_lighting","smooth per-pixel light"}, {"gl_pixel_bump","bumpy wall surfaces"},
+ {"cl_skybox","sky, original leaves map light"},
+ {"gl_sky_lighting","brightness and tint for new skies"},
+ {"gl_materials","roughness / metal light response"},
+ {"gl_soft_particles","soft edges against walls"},
+ {"gl_smoke_lighting","coloured lights on smoke"},
+ {"gl_ssr","reflections of visible surfaces"},
+ {"gl_ssgi","soft reflected screen light"},
+ {"gl_volume_fog","thin light-scattering mist"},
+ {"gl_caustics","moving light under water"},
  {"gl_sun","sun and lamp shadows"}, {"gl_godrays","beams of light"},
  {"cl_fxlevel","quality of all effects"}, {"cl_hdfx","sharper effect sprites"}, {"cl_decals","bullet holes, scorch"},
  {"cl_3dexplo","3D fireballs"}, {"cl_3dbfg","3D BFG ball"}, {"cl_3dblaster","3D blaster bolts"}, {"cl_3drail","3D railgun spiral"},
@@ -2939,7 +2969,7 @@ static qboolean s_benchmark_from_tweaks;
 /* BDGN 3.60c (owner, 2026-11-22: the release keeps only the benchmark that matters to players): "Quick: my presets",
    every preset on the renderer and driver in use, 3 runs each (bdgn_bench_presets). The other benchmarks are gone. */
 static char s_benchmark_label[48];
-static menuaction_s s_benchmark_action;
+static menuaction_s s_benchmark_action,s_modern_benchmark_action;
 
 static void BenchmarkStart (void *item)
 {
@@ -2950,6 +2980,13 @@ static void BenchmarkStart (void *item)
  }
  M_ForceMenuOff();
  Cbuf_AddText("bdgn_bench_presets\n");
+}
+
+static void BenchmarkModernStart(void *item)
+{
+ if(((menuaction_s *)item)->generic.flags&QMF_GRAYED) return;
+ if(s_benchmark_from_tweaks) { M_PopMenu(); TweaksApply(NULL); }
+ M_ForceMenuOff(); Cbuf_AddText("bdgn_bench_modern\n");
 }
 
 static void BenchmarkDraw (void)
@@ -2981,6 +3018,15 @@ static void BenchmarkOpen (qboolean from_tweaks)
  s_benchmark_action.generic.flags=QMF_LEFT_JUSTIFY | (runs<=0?QMF_GRAYED:0);
  s_benchmark_action.generic.callback=BenchmarkStart;
  Menu_AddItem(&s_benchmark_menu,&s_benchmark_action);
+ if(Cvar_VariableValue("bdgn_gl_environment_capable") && !Q_stricmp(Cvar_VariableString("vid_ref"),"gl")) {
+  memset(&s_modern_benchmark_action,0,sizeof(s_modern_benchmark_action));
+  s_modern_benchmark_action.generic.type=MTYPE_ACTION;
+  s_modern_benchmark_action.generic.name="Modern graphics + skies";
+  s_modern_benchmark_action.generic.flags=QMF_LEFT_JUSTIFY;
+  s_modern_benchmark_action.generic.y=20;
+  s_modern_benchmark_action.generic.callback=BenchmarkModernStart;
+  Menu_AddItem(&s_benchmark_menu,&s_modern_benchmark_action);
+ }
  M_PushMenu(BenchmarkDraw,BenchmarkKey);
 }
 

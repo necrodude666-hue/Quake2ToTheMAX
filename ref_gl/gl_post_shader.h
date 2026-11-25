@@ -1,7 +1,7 @@
 /* The scene has already been drawn. HUD and menus are drawn after this pass. */
 static const char post_shader_source[] =
  "#version 110\n"
- "uniform sampler2D image, sceneDepth;\n"
+ "uniform sampler2D image, sceneDepth; uniform vec2 skyRG,skyBL;\n"
  "uniform vec2 stepUV, endUV, effects, aoAndSharpen, depthRange, aoParams, colourStyle, sceneBrightness;\n"
  "vec2 inBounds(vec2 p){return clamp(p,stepUV*.5,endUV-stepUV*.5);}\n"
  "vec3 tap(vec2 p){return texture2D(image,inBounds(p)).rgb;}\n"
@@ -74,6 +74,7 @@ static const char post_shader_source[] =
  " }\n"
  " if(aoAndSharpen.x>0.)c*=1.-aoAndSharpen.x*occlusion(p);\n"
  " if(effects.y>0.)c+=glow(p,stepUV)*effects.y;\n"
+ " c*=vec3(skyRG,skyBL.x)*skyBL.y;\n"
  " if(colourStyle.x>0.){\n"
  "  c=max(c,0.);\n"
  "  c=(c*(2.51*c+.03))/(c*(2.43*c+.59)+.14);\n"

@@ -79,6 +79,14 @@ static void GL_DeleteImageTexture(image_t *image)
 	memset(image,0,sizeof(*image));
 }
 
+/* Live sky selection retains only the current optional environment. */
+void GL_ReleaseOptionalSkyImage(image_t *image)
+{
+ if(image && image!=r_notexture && image->registration_sequence &&
+    image->type==it_sky && !strncmp(image->name,"env/q2ttm_skies/",16))
+  GL_DeleteImageTexture(image);
+}
+
 static qboolean GL_FilterExtension(const char *extensions, const char *name)
 {
 	const char *p=extensions;

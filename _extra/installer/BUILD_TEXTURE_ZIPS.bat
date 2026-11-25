@@ -29,6 +29,19 @@ if exist baseq2\sounds\hd-sounds44\pak7-hd-sounds44.pak (
   if errorlevel 1 goto failed
 )
 echo.
+rem Optional skies stay separate from the core installer. Exactly six sides per sky.
+set ARGS=
+set SKYCOUNT=0
+for %%f in (baseq2\env\q2ttm_skies\*.tga) do if exist "%%f" (
+  set ARGS=!ARGS! -file baseq2/env/q2ttm_skies/%%~nxf "%%f"
+  set /a SKYCOUNT+=1
+)
+if !SKYCOUNT!==60 if exist baseq2\env\q2ttm_skies\catalog.txt (
+  for %%f in (catalog.txt README.txt art_manifest.json) do if exist baseq2\env\q2ttm_skies\%%f set ARGS=!ARGS! -file baseq2/env/q2ttm_skies/%%f "baseq2\env\q2ttm_skies\%%f"
+  bdgn_packtool.exe Q2TTM_zip\Q2TTM_SciFi_Skies.zip !ARGS!
+  if errorlevel 1 goto failed
+)
+
 echo Done. The zip files are in Q2TTM_zip\
 pause
 exit /b 0

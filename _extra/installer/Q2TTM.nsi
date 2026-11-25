@@ -100,9 +100,9 @@ LangString TXT_ABOUT_TEXT ${LANG_ENGLISH} "Default is vanilla Quake II 3.21. Pic
 LangString TXT_DIR_TOP ${LANG_ENGLISH} "Setup looked for Quake II (Steam, GOG, the CD installation and the usual folders). Check the folder: it is the one with quake2.exe and baseq2\pak0.pak. #Quake2ToTheMAX is installed there."
 LangString TXT_NOQ2 ${LANG_ENGLISH} "There is no baseq2\pak0.pak in this folder, so Quake II does not seem to be installed here.$\r$\n$\r$\nInstall here anyway?"
 LangString TXT_ZIPMISSING ${LANG_ENGLISH} " (zip not found)"
-LangString TXT_TEX_TITLE ${LANG_ENGLISH} "Texture packs"
-LangString TXT_TEX_SUB ${LANG_ENGLISH} "Where are the texture pack zip files (Q2TTM_Textures_*.zip)?"
-LangString TXT_TEX_FOUND ${LANG_ENGLISH} "Found $TexCount of 7 packs in:"
+LangString TXT_TEX_TITLE ${LANG_ENGLISH} "Optional packs"
+LangString TXT_TEX_SUB ${LANG_ENGLISH} "Where are the texture, sound and sci-fi sky ZIP files?"
+LangString TXT_TEX_FOUND ${LANG_ENGLISH} "Found $TexCount of 8 packs in:"
 LangString TXT_TEX_NONE ${LANG_ENGLISH} "No texture packs found next to setup or in a Q2TTM_zip folder. Press Browse to find the folder with the zip files, or Next to install without texture packs."
 LangString TXT_TEX_BROWSE ${LANG_ENGLISH} "Browse..."
 LangString TXT_TEX_PICK ${LANG_ENGLISH} "Choose the folder with the texture pack zip files"
@@ -116,7 +116,7 @@ LangString TXT_README ${LANG_ENGLISH} "Show the readme"
 LangString SEC_PATCH_NAME ${LANG_ENGLISH} "id Software Quake II 3.20 patch"
 LangString SEC_SSE_NAME ${LANG_ENGLISH} "SSE version (Quake2SSE.exe)"
 LangString DESC_SSE ${LANG_ENGLISH} "Quake2SSE.exe with SSE renderers and game DLL, about 2 % faster on Pentium III / Athlon XP and newer. Start it with Quake2SSE.bat. Chosen automatically when the processor has SSE."
-LangString SEC_TEX_NAME ${LANG_ENGLISH} "Texture packs"
+LangString SEC_TEX_NAME ${LANG_ENGLISH} "Optional texture, sound and sky packs"
 LangString DESC_CORE ${LANG_ENGLISH} "The game: quake2.exe, the renderers and drivers (OpenGL, software, 3DNow!, 3dfx, PowerVR, S3, Rendition), the BDGN paks, music, low sound packs and low texture packs."
 LangString DESC_PATCH ${LANG_ENGLISH} "id Software's Quake II 3.20 patch: pak1.pak, pak2.pak, the VWep player models, CTF and the mission pack game DLLs. Chosen automatically when pak1.pak or pak2.pak is missing."
 LangString DESC_TEX ${LANG_ENGLISH} "HD texture, effect and sound packs (from the zip files in the folder chosen on the previous page). Choose the set in the game: Video -> picture & textures -> HD textures."
@@ -125,6 +125,7 @@ LangString DESC_HDX ${LANG_ENGLISH} "HD enhanced (about 1.6 GB): sharper upscale
 LangString DESC_HDX2 ${LANG_ENGLISH} "HD enhanced, less grain (about 1.6 GB)."
 LangString DESC_HDSD ${LANG_ENGLISH} "AI (Stable Diffusion) (about 1.6 GB): photo-realistic detail."
 LangString DESC_HD4K ${LANG_ENGLISH} "AI 4K (about 5.2 GB, DDS): for the strongest graphics cards (preset Ultra High Fidelity - 4K)."
+LangString DESC_SKIES ${LANG_ENGLISH} "Ten optional sky-only sci-fi environments. Video -> lighting & shadows -> skybox. Matching brightness, tint and sun/moon direction; standard keeps original map lighting."
 LangString DESC_FX4K ${LANG_ENGLISH} "HD effects (about 335 MB): HD sprites, modern 3D weapon effects, marks and gore, also in 4K. Not on legacy computers."
 LangString DESC_SND ${LANG_ENGLISH} "44.1 kHz 16-bit sounds (about 80 MB), used at sound quality 44 kHz."
 
@@ -162,7 +163,7 @@ Section "#Quake2ToTheMAX ${VERSION}" SEC_CORE
 	SectionIn RO
 	SetOutPath "$INSTDIR"
 	; the HD effects and the 44 kHz sounds are optional zips (Texture packs), not part of the game
-	File /r /x "hd-effects" /x "hd-sounds44" "${Q2DIR}\*.*"
+	File /r /x "hd-effects" /x "hd-sounds44" /x "q2ttm_skies" "${Q2DIR}\*.*"
 	File "${RELDIR}\quake2.exe"
 	File "${RELDIR}\ref_gl.dll"
 	File "${RELDIR}\ref_soft.dll"
@@ -211,6 +212,7 @@ SectionGroup /e "$(SEC_TEX_NAME)" SEC_TEX
 	!insertmacro TEXPACK SEC_HD4K "AI 4K"                    "Q2TTM_Textures_AI_4K_part1.zip"             "hd-ai-4k"               "pak8-hd4k-"
 	!insertmacro TEXPACK SEC_FX4K "HD effects"               "Q2TTM_Textures_HD_Effects.zip"              "hd-effects"             ""
 	!insertmacro TEXPACK SEC_SND  "HD sounds 44 kHz"         "Q2TTM_Sounds_HD_44kHz.zip"                  "hd-sounds44"            ""
+ !insertmacro TEXPACK SEC_SKIES "Sci-fi skies (10)" "Q2TTM_SciFi_Skies.zip" "" ""
 SectionGroupEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -227,6 +229,7 @@ SectionGroupEnd
 	!insertmacro MUI_DESCRIPTION_TEXT ${SEC_HD4K} $(DESC_HD4K)
 	!insertmacro MUI_DESCRIPTION_TEXT ${SEC_FX4K} $(DESC_FX4K)
 	!insertmacro MUI_DESCRIPTION_TEXT ${SEC_SND} $(DESC_SND)
+ !insertmacro MUI_DESCRIPTION_TEXT ${SEC_SKIES} $(DESC_SKIES)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ; ---------------------------------------------------------------- functions
@@ -305,6 +308,7 @@ Function TexStates
 	!insertmacro TEXSTATE ${SEC_HD4K} "Q2TTM_Textures_AI_4K_part1.zip"                  "AI 4K" "Q2TTM_Textures_AI_4K_part*.zip"
 	!insertmacro TEXSTATE ${SEC_FX4K} "Q2TTM_Textures_HD_Effects.zip"             "HD effects" "Q2TTM_Textures_HD_Effects.zip"
 	!insertmacro TEXSTATE ${SEC_SND}  "Q2TTM_Sounds_HD_44kHz.zip"                 "HD sounds 44 kHz" "Q2TTM_Sounds_HD_44kHz.zip"
+ !insertmacro TEXSTATE ${SEC_SKIES} "Q2TTM_SciFi_Skies.zip" "Sci-fi skies (10)" "Q2TTM_SciFi_Skies.zip"
 FunctionEnd
 
 ; how many of the 7 zip files are in folder $R9 -> $R8
@@ -322,6 +326,7 @@ Function CountZips
 	!insertmacro TEXCOUNT1 "Q2TTM_Textures_AI_4K_part1.zip"
 	!insertmacro TEXCOUNT1 "Q2TTM_Textures_HD_Effects.zip"
 	!insertmacro TEXCOUNT1 "Q2TTM_Sounds_HD_44kHz.zip"
+ !insertmacro TEXCOUNT1 "Q2TTM_SciFi_Skies.zip"
 FunctionEnd
 
 ; the texture packs: next to setup, in a Q2TTM_zip folder next to it, one level up, in the game folder, on the desktop

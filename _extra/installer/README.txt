@@ -23,3 +23,11 @@ Facebook: https://www.facebook.com/braindrainlan
 3.60i corrected source: rebuild the client and ref_gl, including SSE builds,
 before testing the rail impact, item visibility and MAX 4K overlay fixes.
 No PAK files or binary-only drivers changed.
+
+
+OPTIONAL SCI-FI SKIES (25 November 2026)
+Put Q2TTM_SciFi_Skies.zip beside Setup or in its optional-pack folder.
+The ZIP uses stored entries, supported by the existing Win95 unpacker.
+It installs baseq2/env/q2ttm_skies (60 TGA faces and a small catalogue).
+It is excluded from the core File /r. Do not add the art to the core source
+ZIP or force it onto legacy machines. Download and install it separately.

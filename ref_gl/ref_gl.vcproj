@@ -302,6 +302,9 @@
 				RelativePath=".\weapon_colors.h"
 				>
 			</File>
+			<File RelativePath=".\gl_modern_fx.h" />
+			<File RelativePath=".\gl_modern_shaders.h" />
+			<File RelativePath=".\gl_pixel_legacy_shader.h" />
 			<File
 				RelativePath=".\gl_local.h"
 				>

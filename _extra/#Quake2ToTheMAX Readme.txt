@@ -256,3 +256,15 @@ More detail: see CHANGELOG_BDGN_3.28_to_3.36.txt
 
   Have fun, and frag fast!
 =====================================================================
+
+
+25 November 2026 - OPTIONAL MODERN EFFECTS AND SKIES
+New skybox and matching-light choices: Video -> lighting & shadows.
+Standard skybox = original map lighting. Ten sky-only sci-fi environments
+are in the separate Q2TTM_SciFi_Skies.zip; extract it to the game folder.
+New lighting/material, soft smoke, SSR, SSGI, thin fog and underwater-caustic
+options have their own capability checks. Default keeps them off; eligible
+MAX Fidelity 4K enables them. Modern graphics + skies is a separate benchmark.
+SMP system OpenGL now offers the quality profiles too; unsupported MTGL
+shader effects retain the original rendering path. See README.md in the
+source package for values, material sidecars, validation and limitations.

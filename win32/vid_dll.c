@@ -953,6 +953,10 @@ qboolean VID_LoadRefresh( char *name )
 	Cvar_SetValue("bdgn_gl_volume_shadow_capable",0);	/* BDGN 3.55ai */
 	Cvar_SetValue("bdgn_gl_godrays_capable",0);	/* BDGN 3.55ak */
 	Cvar_SetValue ("bdgn_gl_post_active", 0);
+ Cvar_SetValue("bdgn_gl_sky_capable",0);
+ Cvar_SetValue("bdgn_gl_materials_capable",0);
+ Cvar_SetValue("bdgn_gl_soft_particles_capable",0);
+ Cvar_SetValue("bdgn_gl_environment_capable",0);
 	Cvar_SetValue ("r_simd_sse2_mipmap", 0);
 	Cvar_SetValue ("r_simd_sse2_lightmap", 0);
 	Cvar_SetValue ("r_simd_sse_ready", 0);

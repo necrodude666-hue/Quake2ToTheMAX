@@ -20,6 +20,17 @@ light: walls and floors keep the light they were compiled with.
 The sun's direction and colour are also what GL_DrawGodRays (gl_render_scale.c) uses.
 */
 #include "gl_local.h"
+#include "../qcommon/sky_profiles.h"
+static const q2ttm_sky_profile_t *sky_profile;
+static cvar_t *sky_lighting;
+
+int R_SkyLighting(vec3_t tint, float *gain)
+{
+ if (!sky_profile || !sky_lighting || !sky_lighting->value || !gl_soft_shadow_capable) return 0;
+ VectorCopy(sky_profile->tint,tint);
+ *gain=sky_profile->gain;
+ return 1;
+}
 
 #define MAX_LAMPS		384
 #define LAMP_MERGE		96.0f
@@ -43,6 +54,7 @@ void LoadTGA (char *name, byte **pic, int *width, int *height);
 void R_SunInit (void)
 {
 	gl_sun = ri.Cvar_Get ("gl_sun", "0", CVAR_ARCHIVE);
+ sky_lighting = ri.Cvar_Get("gl_sky_lighting","1",CVAR_ARCHIVE);
 }
 
 /*
@@ -55,6 +67,10 @@ static int	sun_pending;
 /* the sky changed: the pictures are read when the sun is first asked for (never with gl_sun and gl_godrays off) */
 void R_SunSetSky (const char *skyname)
 {
+ int i;
+ sky_profile=NULL;
+ if (gl_soft_shadow_capable && skyname)
+  for (i=0;i<10;i++) if (!strcmp(skyname,q2ttm_sky_profiles[i].name)) { sky_profile=&q2ttm_sky_profiles[i]; break; }
 	r_sun_valid = 0;
 	sun_pending = 1;
 	strncpy (sun_skyname, skyname ? skyname : "", sizeof(sun_skyname) - 1);
@@ -67,6 +83,12 @@ void R_SunCheck (void)
 	if (!sun_pending)
 		return;
 	sun_pending = 0;
+ if (sky_profile) {
+  VectorCopy(sky_profile->direction,r_sun_dir);
+  VectorCopy(sky_profile->sun,r_sun_color);
+  r_sun_valid=1;
+  return;
+ }
 	R_SunFind (sun_skyname);
 }
 
