@@ -535,8 +535,14 @@ void CL_AsyncSendCmd (void)
 		cl_send_override = &out;
 		CL_SendCmd ();
 		cl_send_override = NULL;
-		cl_async_acc.fwd -= out.forwardmove * CL_ASYNC_MS;
-		cl_async_acc.side -= out.sidemove * CL_ASYNC_MS;
+		/* Keep only the time-weighted input belonging to the remaining ms.
+		   Subtracting the rounded output command instead left a permanent
+		   remainder: full 10 ms commands were zero while provisional commands
+		   still moved the camera after releasing a key. Round the remaining
+		   weight toward zero so quantization cannot invent later input.
+		   msec <= 259 and axes are signed shorts, so these products fit int. */
+		cl_async_acc.fwd = cl_async_acc.fwd * (cl_async_acc.msec - CL_ASYNC_MS) / cl_async_acc.msec;
+		cl_async_acc.side = cl_async_acc.side * (cl_async_acc.msec - CL_ASYNC_MS) / cl_async_acc.msec;
 		cl_async_acc.msec -= CL_ASYNC_MS;
 		/* what is held now (keys, attack) goes on into the rest; a tap and the impulse went with this move */
 		cl_async_acc.up = cl_async_acc.msec ? c.upmove : 0;
