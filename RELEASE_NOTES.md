@@ -6,7 +6,7 @@
 - The old production function reproduces nonzero forward/side input after two seconds without input. The corrected production function reaches zero. A native Win32 regression covers 107 scenarios, including both axes/signs, varying frame durations, full-range short values, fixed 10 ms commands, mouse angles, button taps and single-use impulses.
 - A separate native test uses the unchanged q2dm1 BSP and production Pmove/collision code at the owner's captured location. Phantom provisional input reproduces the measured 1/8-unit lateral displacement; corrected idle input keeps the position stable at every tested duration from 1 to 10 ms.
 - Pmove, physics rate, movement rules, collision and protocol 34 are unchanged. No rendering cap or VSync change is imposed. Continuous movement remains unchanged in the regression cases; mixed input is resampled without retaining quantization residue.
-- This addresses a concrete camera/input defect found while investigating the owner's wall vibration. The broader wall/lift issue remains under review pending gameplay confirmation of this correction.
+- The owner confirmed on 25 November 2026 that the reported vibration is resolved in the rebuilt game. This follows the native input regression and q2dm1 collision reproduction. The previous 100 FPS workaround is no longer required for this corrected issue.
 
 ## 3.60i rail wall-smoke correction - 24 November 2026
 
@@ -14,7 +14,7 @@
 - Each puff grows to six times its starting diameter over one second, then fades for two seconds. The fixed smoke frame is recentered at the impact, removing its baked displacement. The encoded renderer scale stays within range, so the requested growth is preserved.
 - Existing 3D smoke controls, presets, benchmark cases and driver/CPU requirements apply. No additional assets, cvars, renderer-interface fields or effect-pool memory are needed.
 - This replaces the preceding twelve-puff/fivefold cloud design. That design's large scale values were clipped by the renderer and did not produce the stated visual size increase.
-- Wall/lift vibration with fixed 100 Hz physics and unlimited rendering remains an open issue; the owner reports that a 100 FPS rendering limit avoids it.
+- Historical status before the input correction: wall/lift vibration was open. The owner confirmed the reported vibration resolved after the 25 November input correction.
 
 ## 3.60i robustness review and rail impact smoke - 24 November 2026
 
