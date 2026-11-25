@@ -1,5 +1,9 @@
 # Changelog
 
+## Historical foundation: BDGN 3.28
+
+The recovered original patch notes document cinematic and weapon-hand options, 8/44 kHz audio, OpenGL texture simplification, 2.4x zoom, WASD/freelook defaults and SMP OpenGL as part of **BDGN 3.28 by Nitton Attiofyra**, before the later Quake2ToTheMAX development. [Read the historical notes, cvars and period SMP results](HISTORY_3.28.md). This corrects the previously incomplete early history; it does not claim these as new 3.60i features.
+
 ## 3.60i fixed-physics input correction - 25 November 2026
 
 - The fixed 100 Hz input accumulator now retains the time-weighted input for the remaining milliseconds, rather than a remainder from a rounded command. Releasing a movement key no longer leaves permanent phantom input in the provisional command used between physics ticks.
@@ -120,7 +124,7 @@ First public release.
 
 ## BDGN 3.28 to 3.60 (the road to 1.0)
 
-- 3.28 (Nitton Åttiofyra): 3DNow! optimizations, the BDGN base.
+- 3.28 (Nitton Åttiofyra): cinematic/weapon-hand options, 8/44 kHz audio, OpenGL texture simplification, 2.4x zoom, WASD/freelook and SMP OpenGL; see HISTORY_3.28.md for the original-note summary.
 - 3.3x-3.4x: hardware detection, presets per graphics card family, Cacheman, mtgl32 SMP OpenGL, AMD 3DNow!
   renderers.
 - 3.5x: Software renderer with id's Pentium assembler again, SMP software rendering, low RAM modes, 2D sprite
