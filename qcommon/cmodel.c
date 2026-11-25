@@ -1452,6 +1452,70 @@ trace_t		CM_BoxTrace (vec3_t start, vec3_t end,
 }
 
 
+/* A legacy blaster event can identify a point near a wall without its real
+   normal. Find a nearby physical surface for client visuals only. Project onto
+   the actual convex brush faces, including edges, then verify against the
+   unchanged world trace. No entity, collision rule, map data or gameplay update. */
+qboolean CM_VisualImpact(vec3_t origin, float radius, trace_t *contact)
+{
+ int i,j,k,pass,inside,valid,changed,found=0;
+ float best=radius*radius;
+ if(!contact || !(radius>0 && radius<=32)) return false;
+ inside=(CM_PointContents(origin,0)&MASK_SOLID)!=0;
+ for(i=0;i<numbrushes;i++) {
+  cbrush_t *brush=&map_brushes[i];
+  if(!(brush->contents&MASK_SOLID) || brush->numsides<=0) continue;
+  for(j=0;j<brush->numsides;j++) {
+   cplane_t *p=map_brushsides[brush->firstbrushside+j].plane;
+   float d=DotProduct(origin,p->normal)-p->dist;
+   if(d>radius) break;
+  }
+  if(j<brush->numsides) continue;
+  for(j=0;j<brush->numsides;j++) {
+   cplane_t *face=map_brushsides[brush->firstbrushside+j].plane;
+   vec3_t point,tangent,from,to,delta;
+   float d=DotProduct(origin,face->normal)-face->dist;
+   trace_t tr;
+   if(d*d>best) continue;
+   VectorMA(origin,-d,face->normal,point);
+   valid=1;
+   /* Clamp to the finite face while staying on its plane. This catches narrow
+      trims and angled corners that six axial rays can all miss. */
+   for(pass=0;pass<8 && valid;pass++) {
+    changed=0;
+    for(k=0;k<brush->numsides;k++) {
+     cplane_t *p=map_brushsides[brush->firstbrushside+k].plane;
+     float excess=DotProduct(point,p->normal)-p->dist;
+     if(excess>.001f) {
+      float dot=DotProduct(p->normal,face->normal),length;
+      VectorMA(p->normal,-dot,face->normal,tangent);
+      length=DotProduct(tangent,tangent);
+      if(length<.00001f) { valid=0; break; }
+      VectorMA(point,-excess/length,tangent,point); changed=1;
+     }
+    }
+    if(!changed) break;
+   }
+   if(!valid) continue;
+   for(k=0;k<brush->numsides;k++) {
+    cplane_t *p=map_brushsides[brush->firstbrushside+k].plane;
+    if(DotProduct(point,p->normal)-p->dist>.05f) break;
+   }
+   if(k<brush->numsides) continue;
+   VectorSubtract(point,origin,delta);
+   if(DotProduct(delta,delta)>best) continue;
+   if(inside) VectorMA(point,.125f,face->normal,from);
+   else VectorCopy(origin,from);
+   VectorMA(point,-.125f,face->normal,to);
+   tr=CM_BoxTrace(from,to,vec3_origin,vec3_origin,0,MASK_SOLID);
+   if(tr.startsolid || tr.allsolid || tr.fraction>=1) continue;
+   VectorSubtract(tr.endpos,origin,delta); d=DotProduct(delta,delta);
+   if(d<=best) { best=d; *contact=tr; found=1; }
+  }
+ }
+ return found;
+}
+
 /*
 ==================
 CM_TransformedBoxTrace

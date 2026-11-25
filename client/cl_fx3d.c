@@ -540,6 +540,46 @@ void CL_FX3D_ExplosionSmoke (vec3_t pos, qboolean fire_set)
 	}
 }
 
+/* Old protocol-34 servers can send the muzzle backed up ten units with a
+   zero normal when its spawn point is blocked. Zero encodes as bytedirs[0].
+   First verify a legitimate nearby plane; only that ambiguous legacy normal
+   permits a bounded nearby-surface query. Never use the viewer as a ray. */
+static void FX_BlasterContact(vec3_t pos, vec3_t normal)
+{
+ vec3_t n,from,to;
+ trace_t tr;
+ VectorCopy(normal,n);
+ if(VectorNormalize(n)<.001f) return;
+ VectorMA(pos,2,n,from); VectorMA(pos,-2,n,to);
+ tr=CM_BoxTrace(from,to,vec3_origin,vec3_origin,0,MASK_SOLID);
+ if(!tr.startsolid && !tr.allsolid && tr.fraction<1 && DotProduct(tr.plane.normal,n)>.95f) {
+  VectorCopy(tr.endpos,pos); VectorCopy(tr.plane.normal,normal); return;
+ }
+ if(n[0]>-.5255f || n[0]<-.5260f || fabs(n[1])>.0002f || n[2]<.8504f || n[2]>.8509f) return;
+ if(CM_VisualImpact(pos,24,&tr)) {
+  VectorCopy(tr.endpos,pos); VectorCopy(tr.plane.normal,normal);
+ }
+}
+
+/* A short, real 3D energy volume centred on the contact. Reuses the existing
+   blaster mesh/selected HD or AI-4K skin; no billboard and no camera pull. */
+qboolean CL_FX3D_BlasterImpact(vec3_t pos, vec3_t normal)
+{
+ fx3d_t *f;
+ vec3_t origin,angles,n;
+ if(!CL_FX3D_On(cl_3dblaster) || !fx3d_model[M_BLASTER_HEAD]) return false;
+ FX_BlasterContact(pos,normal);
+ VectorCopy(normal,n);
+ if(VectorNormalize(n)<.001f) VectorSet(n,0,0,1);
+ VectorMA(pos,.25f,n,origin);
+ FX_AnglesFromDir(n,angles);
+ f=FX_Anim(M_BLASTER_HEAD,origin,angles,RF_FXMESH|RF_FXADD,0,40,.85f);
+ if(!f) return false;
+ f->fadeout=180;
+ FX_Light(pos,200,150,0,1,.75f,.3f,1,.5f,.15f,0);
+ return true;
+}
+
 /* blaster hit: a small puff blown out of the wall */
 void CL_FX3D_HitSmoke(vec3_t pos, vec3_t dir, int delay, qboolean hyper_hit)
 {

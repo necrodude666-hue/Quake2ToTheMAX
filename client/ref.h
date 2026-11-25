@@ -69,7 +69,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define RF_ACTOR_MARK (RF_DECAL|RF_FXMESH)
 #define FX_LAYER_BFG_SMOKE 1 /* lightstyle on RF_PUFFS */
 #define FX_LAYER_RAIL_SMOKE 2 /* single puff at entity origin, without baked MD2 drift */
-#define FX_SPRITE_IMPACT 3 /* lightstyle on mod_sprite: angles orient the flash to its hit plane */
 /* BDGN 3.56x: RF_PUFFS without RF_RAILSMOKE_SHORT: lightstyle >= FX_PUFF_SCALE_ONE carries a scale in bits 16-23
    (1..255 = 1/255 .. 1) for clouds that grow from nothing; the low byte keeps the layer */
 #define FX_PUFF_SCALE_ONE 0x10000

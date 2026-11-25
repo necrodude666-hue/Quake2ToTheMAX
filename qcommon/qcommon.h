@@ -650,6 +650,10 @@ int			CM_TransformedPointContents (vec3_t p, int headnode, vec3_t origin, vec3_t
 trace_t		CM_BoxTrace (vec3_t start, vec3_t end,
 						  vec3_t mins, vec3_t maxs,
 						  int headnode, int brushmask);
+/* Read-only geometry query for repairing legacy visual impact events.
+   Never used by server collision, prediction or damage handling. */
+qboolean CM_VisualImpact(vec3_t origin, float radius, trace_t *contact);
+
 trace_t		CM_TransformedBoxTrace (vec3_t start, vec3_t end,
 						  vec3_t mins, vec3_t maxs,
 						  int headnode, int brushmask,

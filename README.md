@@ -1,5 +1,19 @@
 # #Quake2ToTheMAX 1.0
 
+## Near-wall blaster impact correction - 25 November 2026
+
+Verified analysis: the inherited blocked-muzzle path can send a blaster impact at the muzzle backed up ten units, with no surface normal. Protocol 34 encodes that zero vector as direction index zero. A large HD flash exposes the resulting position error. Aligning the flash to that wrong normal made the previous attempt appear flat without fixing the underlying visual contact.
+
+The final correction is **client-side only**:
+
+- Valid nearby impact planes retain their normal. An ambiguous legacy direction can request a surface within 24 units using the loaded BSP's actual convex brush faces and the existing world trace. Finite faces/edges and overlapping solid brushes are handled, rather than firing a handful of axial rays. The new `CM_VisualImpact` query is called only by this client visual path; server projectile, prediction, damage, map and protocol behaviour are unchanged.
+- With **3D blaster** (`cl_3dblaster 1`), the flash uses the existing eight-frame 3D blaster energy mesh for 200 ms, centred just 0.25 units outside the resolved contact. There is no camera pull or wall-flat flash. The selected standard/AI/4K effect skin also applies to this mesh; no new asset files are needed.
+- The light, mark, sparks and following smoke use the same resolved visual contact. Smoke starts after the short 3D flash. The HD-only fallback retains a camera-facing sprite at the contact; the temporary wall-oriented sprite branch has been removed.
+- Existing CPU/driver/classic-mode checks run before contact recovery or allocation. Unsupported paths do no extra tracing or effect work.
+
+Verification: the isolated unchanged server function reproduces an eight-unit air gap and missing normal. The client correction passes valid/sloped/no-surface and disabled-path fixtures. Using the actual collision engine and retail q2dm1 BSP, 1,985 outside-wall and 1,976 inside-wall legacy contacts resolve to real collision surfaces. All eight mesh frames have nonzero depth in every axis. Fourteen C units pass the 32-bit compile check. The game DLL, wire-event code and existing collision trace functions remain unchanged.
+
+
 ## MAX 4K quality reference - 25 November 2026
 
 The highest preset follows the owner's latest visual reference: 16x anisotropic filtering, trilinear full-detail textures, the installed AI 4K world/effect/mark packs, high bloom and SSAO, four per-pixel lights, material response, full water reflections/interactions, high underwater scattering, high god rays, soft/lit smoke, high SSR/SSGI/fog, 40 debris pieces, maximum lava smoke/bursts and relief depth 3.25. Existing driver/CPU/asset checks still decide which features can run. AI 4K effect textures fall back to standard 4K or HD when the optional set is absent. Artistic sky choice, rail colours and the player's FPS limit remain personal choices.
@@ -14,7 +28,7 @@ The native context requests up to 8x MSAA, the highest level currently offered b
 - Underwater caustics and light shafts use stable world coordinates. Moving the camera's 32 x 32 visibility mask by a 128-unit cell no longer restarts or translates the procedural wave pattern.
 - Point-source refraction is evaluated at the world sample. The camera's cached direction no longer steers the field, and a timed visibility refresh keeps the selected lamp while swimming in the same water body. Leaving the water, changing maps, changing sky or rewinding time invalidates the selection.
 - The large **q2dm1 / The Edge pool leading to the railgun** has an additional fixed overhead source for modern underwater lighting. Its position is `(400, 96, 760)`, above the original water plane at z=440. It contributes only through visible air/water entries, so roofs and walls block it. This is a renderer effect, with no change to the BSP, entities, protocol or original baked lighting. Other maps continue to use their existing visible lamps/sky.
-- HD blaster/hyperblaster wall-impact flashes now lie on the hit plane at the mark, with a half-unit depth separation. They no longer move towards the camera. Their dynamic light stays at the original network impact position. Ordinary sprites and the original explosion path retain their previous behaviour; no new effect assets or renderer ABI fields are required.
+- Blaster/hyperblaster impacts use the client-side contact correction described above. The wall-flat flash experiment is replaced by the existing 3D energy mesh when 3D blaster is enabled, and ordinary sprite drawing is restored. No new assets or renderer ABI fields are required.
 
 Controls remain **Video -> effects & water -> Water**: underwater caustics on, underwater light rays high. Console equivalents are `gl_caustics 1` and `gl_water_scattering 2`. MAX 4K selects these where the CPU/active driver permits them. The supplemental pool source is part of those water effects; it does not add a server-side lamp or a visible lamp model. Unsupported/legacy paths still skip the modern water pass.
 

@@ -1314,20 +1314,20 @@ void CL_ParseTEnt (void)
 		MSG_ReadDir (&net_message, dir);
 		if (CL_SimpleBlasterHit (pos, dir, true))
 			break;
+		if (CL_FX3D_BlasterImpact(pos,dir)) {
+			CL_FX3D_HitSmoke(pos,dir,200,false);
+			CL_BlasterParticles(pos,dir);
+			S_StartSound(pos,0,0,cl_sfx_lashit,1,ATTN_NORM,0);
+			break;
+		}
 		CL_FX3D_HitSmoke(pos,dir,300,false);
 		CL_BlasterParticles (pos, dir);
 		if (CL_HDFX () && cl_hdfx_blaster_hit)
-		{	/* Keep the flash on the same plane/point as the impact mark. */
+		{	/* HD-only fallback: face the view, but keep the verified contact. */
 			ex = CL_SpriteExplosion (pos, cl_hdfx_blaster_hit, 300, 6);
 			if (ex) {
-				vec3_t normal;
-				VectorCopy(dir,normal);
-				if (VectorNormalize(normal)<.001f) VectorSet(normal,0,0,1);
 				ex->pull=0;
-				ex->ent.lightstyle=FX_SPRITE_IMPACT;
-				ex->ent.angles[YAW]=(float)(atan2(normal[1],normal[0])*180/M_PI);
-				ex->ent.angles[PITCH]=(float)(atan2(-normal[2],sqrt(normal[0]*normal[0]+normal[1]*normal[1]))*180/M_PI);
-				VectorMA(pos,.5f,normal,ex->ent.origin);
+				VectorMA(pos,.25f,dir,ex->ent.origin);
 				VectorCopy(ex->ent.origin,ex->ent.oldorigin);
 				ex->light=150; VectorSet(ex->lightcolor,1,.8f,.3f);
 			}

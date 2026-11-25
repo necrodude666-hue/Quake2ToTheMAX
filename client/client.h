@@ -382,6 +382,8 @@ qboolean CL_FX3D_RocketExplosion (vec3_t pos);
 qboolean CL_FX3D_BFGExplosion (vec3_t pos, qboolean big);
 void CL_FX3D_ExplosionSmoke (vec3_t pos, qboolean fire_set);
 void CL_FX3D_HitSmoke(vec3_t pos, vec3_t dir, int delay, qboolean hyper_hit);
+/* May repair a legacy server's near-wall contact in pos/normal before all visuals. */
+qboolean CL_FX3D_BlasterImpact(vec3_t pos, vec3_t normal);
 void CL_FX3D_RailImpactSmoke(vec3_t pos, vec3_t dir);
 void CL_FX3D_BFGMist (vec3_t pos, int anim_ms, qboolean small_hit);
 qboolean CL_FX3D_RocketTrail(vec3_t start, vec3_t end, float *step);

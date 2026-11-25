@@ -310,7 +310,6 @@ void R_DrawSpriteModel (entity_t *e)
 	vec3_t	point;
 	dsprframe_t	*frame;
 	float		*up, *right;
-	vec3_t impact_normal, impact_right, impact_up;
 	dsprite_t		*psprite;
 
 	// don't even bother culling, because it's just a single
@@ -340,12 +339,7 @@ void R_DrawSpriteModel (entity_t *e)
 	}
 	else
 #endif
-	if (e->lightstyle==FX_SPRITE_IMPACT) {
-		R_AngleVectors(e->angles,impact_normal,impact_right,impact_up);
-		/* Quake II culls GL_FRONT: the drawn face must point into the hit surface. */
-		VectorScale(impact_right,-1,impact_right);
-		up=impact_up; right=impact_right;
-	} else {	// normal sprite
+	{	// normal sprite
 		up = vup;
 		right = vright;
 	}
