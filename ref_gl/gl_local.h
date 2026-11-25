@@ -339,6 +339,7 @@ extern cvar_t *gl_sun;
 void R_SunInit (void);
 int R_WaterLight(vec3_t point,vec3_t direction,vec3_t colour,vec3_t source,int *sun);
 int R_WaterLightVisible(vec3_t point,vec3_t source,int sun);
+unsigned R_WaterLightRevision(void);
 void R_SMPInit(void);
 void R_SMPPrepare(void);
 void R_SMPFinish(void);

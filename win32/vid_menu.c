@@ -2589,11 +2589,10 @@ qboolean VID_ApplyPresetSettings(int id,qboolean archive)
   SetPresetValue("gl_water_scattering",Cvar_VariableValue("bdgn_gl_environment_capable")?"2":"0");
  }
 	if (tier_id==83 && !Cvar_VariableValue("bdgn_legacy_graphics") && !Cvar_VariableValue("bdgn_lowram")) {
-		/* BDGN 3.56v: the best preset, Ultra High Fidelity - 4K, is the owner's own config.cfg of 2026-11-18 ("the
-		   best looking of them all") with 44 kHz sound, at the desktop resolution. The picture steps that need the
+		/* BDGN 3.56v: the best preset, Ultra High Fidelity - 4K, is the owner's own config.cfg of 2026-11-25 ("the
+		   best looking of them all") with 44 kHz sound; display geometry is kept. The picture steps that need the
 		   driver stay behind their capability checks above (shadows, sun, god rays, water, relief, MSAA, 4K). */
-		int k, w=0, h=0;
-		SetPresetValue("gl_relief_depth","4");
+		SetPresetValue("gl_relief_depth","3.25");
 		SetPresetValue("gl_scene_gamma","0.7");
 		SetPresetValue("intensity","2");
 		SetPresetValue("gl_modulate","1");
@@ -2612,7 +2611,10 @@ qboolean VID_ApplyPresetSettings(int id,qboolean archive)
 			SetPresetValue("cl_decals","2");
 		SetPresetValue("cl_shells",CL_Shells_Available()?"1":"0");
 		SetPresetValue("cl_cells",CL_Cells_Available()?"1":"0");
-		SetPresetValue("cl_explosion_debris","24");
+		SetPresetValue("cl_explosion_debris","40");
+		SetPresetValue("cl_lavasmoke","10");
+		if (Cvar_VariableValue("cl_lavabursts")>0) SetPresetValue("cl_lavabursts","4");
+		if (Cvar_VariableValue("bdgn_gl_godrays_capable")) SetPresetValue("gl_godrays","2");
 		SetPresetValue("cl_weaponlights","1");
 		SetPresetValue("s_maxchannels","32");
 		SetPresetValue("s_mixahead","0.2");
@@ -2620,16 +2622,7 @@ qboolean VID_ApplyPresetSettings(int id,qboolean archive)
 			SetPresetValue("s_khz","44");
 			SetPresetValue("s_loadas8bit","0");
 		}
-		/* the desktop resolution, full screen: the mode of exactly that size, with its aspect ratio in the list */
-		VID_DesktopSize(&w,&h);
-		for (k=0;preset_archive && !Q_stricmp(vid_ref->string,"gl") && k<NUM_GL_MODES;k++)	/* not while the benchmark or Auto tries presets */
-			if (res_wh[k][0]==w && res_wh[k][1]==h) {
-				int a=w*3==h*4?1:(w*4==h*5?2:(w*10==h*16?3:(w*21>h*40?5:4)));
-				SetPresetValue("gl_mode",va("%i",k));
-				SetPresetValue("vid_fullscreen","1");
-				SetPresetValue("vid_aspect",va("%i",a));
-				break;
-			}
+		/* Picture quality does not change output resolution, fullscreen or window placement. */
 	}
 	if ((id==65 || id==66 || id==57) && PresetUsesSmpWicked())
 		Com_Printf("SMP WickedGL: PSYCHO Fast uses Ultra Fast settings.\n");

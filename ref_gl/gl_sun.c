@@ -63,11 +63,14 @@ highest mean brightness, if it stands out from the sky (clearly brighter than th
 */
 static char	sun_skyname[MAX_QPATH];
 static int	sun_pending;
+static unsigned water_light_revision;
+unsigned R_WaterLightRevision(void) { return water_light_revision; }
 
 /* the sky changed: the pictures are read when the sun is first asked for (never with gl_sun and gl_godrays off) */
 void R_SunSetSky (const char *skyname)
 {
  int i;
+ water_light_revision++;
  sky_profile=NULL;
  if (gl_soft_shadow_capable && skyname)
   for (i=0;i<10;i++) if (!strcmp(skyname,q2ttm_sky_profiles[i].name)) { sky_profile=&q2ttm_sky_profiles[i]; break; }
@@ -356,7 +359,7 @@ float R_SunShadowDirection (vec3_t origin, float *dx, float *dy)
 }
 
 /* A visible, fixed source ABOVE the interface, shared by caustics and shafts.
-   No invented overhead light when the map has no source for this water. */
+   q2dm1 has one deliberate renderer-only pool light; other maps use their lamps/sky. */
 int R_WaterLightVisible(vec3_t point,vec3_t source,int sun)
 {
  vec3_t end;
@@ -366,6 +369,18 @@ int R_WaterLightVisible(vec3_t point,vec3_t source,int sun)
 int R_WaterLight(vec3_t point,vec3_t direction,vec3_t colour,vec3_t source,int *sun)
 {
  int i,best=-1; float score=0;
+ /* The Edge: the large z=440 pool leading to the railgun room. Only the modern
+    water pass calls this function; BSP, server lighting and original modes stay
+    unchanged. Check the interface and visibility so modified maps cannot leak it. */
+ if(r_worldmodel && !Q_stricmp(r_worldmodel->name,"maps/q2dm1.bsp") &&
+    point[0]>-128 && point[0]<768 && point[1]>-320 && point[1]<320 && fabs(point[2]-442)<4) {
+  vec3_t lamp={400,96,760};
+  if(!(Mod_PointInLeaf(lamp,r_worldmodel)->contents&(CONTENTS_SOLID|CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA)) &&
+     R_WaterLightVisible(point,lamp,0)) {
+   VectorCopy(lamp,source); VectorSubtract(source,point,direction); VectorNormalize(direction);
+   VectorSet(colour,.82f,.92f,1); *sun=0; return 1;
+  }
+ }
  R_SunCheck();
  if(r_sun_valid && r_sun_dir[2]>.08f && R_WaterLightVisible(point,point,1)) {
   VectorCopy(r_sun_dir,direction); VectorCopy(r_sun_color,colour); VectorMA(point,8192,direction,source); *sun=1; return 1;

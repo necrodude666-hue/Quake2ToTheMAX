@@ -1317,9 +1317,20 @@ void CL_ParseTEnt (void)
 		CL_FX3D_HitSmoke(pos,dir,300,false);
 		CL_BlasterParticles (pos, dir);
 		if (CL_HDFX () && cl_hdfx_blaster_hit)
-		{	/* BDGN 3.55s: HD flash, off the wall along its normal */
-			VectorMA (pos, 4, dir, pos2);
-			CL_HDFXExplosion (pos, cl_hdfx_blaster_hit, 300, 6, 150, 1, 0.8f, 0.3f);
+		{	/* Keep the flash on the same plane/point as the impact mark. */
+			ex = CL_SpriteExplosion (pos, cl_hdfx_blaster_hit, 300, 6);
+			if (ex) {
+				vec3_t normal;
+				VectorCopy(dir,normal);
+				if (VectorNormalize(normal)<.001f) VectorSet(normal,0,0,1);
+				ex->pull=0;
+				ex->ent.lightstyle=FX_SPRITE_IMPACT;
+				ex->ent.angles[YAW]=(float)(atan2(normal[1],normal[0])*180/M_PI);
+				ex->ent.angles[PITCH]=(float)(atan2(-normal[2],sqrt(normal[0]*normal[0]+normal[1]*normal[1]))*180/M_PI);
+				VectorMA(pos,.5f,normal,ex->ent.origin);
+				VectorCopy(ex->ent.origin,ex->ent.oldorigin);
+				ex->light=150; VectorSet(ex->lightcolor,1,.8f,.3f);
+			}
 			S_StartSound (pos, 0, 0, cl_sfx_lashit, 1, ATTN_NORM, 0);
 			break;
 		}

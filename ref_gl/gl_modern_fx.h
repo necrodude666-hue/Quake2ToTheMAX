@@ -259,6 +259,8 @@ static void ModernMask(void)
 void GL_ModernEnvironment(void)
 {
  GLfloat projection[16],inverse[16]; GLint previous,program,mode,active; glstate_t saved; int i,water;
+ /* Invalidate even when the water-only pass exits early above the surface. */
+ if(!(r_newrefdef.rdflags&RDF_UNDERWATER)) water_mask_valid=0;
  if(modern_stamp!=r_framecount || !modern_screen || !ModernWorld() ||
    (!modern_ssr->value && !modern_gi->value && !modern_fog->value &&
     !((modern_caustics->value || modern_water_scatter->value) && (r_newrefdef.rdflags&RDF_UNDERWATER)))) return;
@@ -288,6 +290,8 @@ void GL_ModernEnvironment(void)
  pixel_uniform4f(ModernUniform(modern_screen,"waterData"),water_mask_height,(float)water_mask_x-512,(float)water_mask_y-512,1.0f/1024);
  pixel_uniform4f(ModernUniform(modern_screen,"waterDirection"),water_light_dir[0],water_light_dir[1],water_light_dir[2],water?1.0f:0.0f);
  pixel_uniform4f(ModernUniform(modern_screen,"waterColour"),water_light_colour[0],water_light_colour[1],water_light_colour[2],0);
+ pixel_uniform4f(ModernUniform(modern_screen,"waterSource"),water_light_source[0],water_light_source[1],water_light_source[2],water && !water_light_sun?1.0f:0.0f);
+ pixel_uniform4f(ModernUniform(modern_screen,"waterSource"),water_light_source[0],water_light_source[1],water_light_source[2],water && !water_light_sun?1.0f:0.0f);
  uniform2f(ModernUniform(modern_screen,"waterModes"),water && modern_caustics->value?1.0f:0.0f,water?modern_water_scatter->value:0.0f);
  ModernLights(modern_screen,modern_fog->value!=0);
  qglBegin(GL_QUADS); qglVertex2f(-1,-1); qglVertex2f(1,-1); qglVertex2f(1,1); qglVertex2f(-1,1); qglEnd();

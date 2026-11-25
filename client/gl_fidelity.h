@@ -35,7 +35,7 @@ static const gl_fidelity_preset_t gl_highfi_presets[]={
  {"highfidelity3",16,{"High Fidelity 3 - Maximum",100,3,1,2,1,8,1,1},4,{4,1,3,2},1},	/* 3.56a: ambient occlusion 1 (was 2), as in the owner's own config.cfg, the base of this preset */
  /* BDGN 3.55w: High Fidelity 3 with the AI 4K texture set (pak8-hd4k-*.pak, DDS); listed only when that set is
     installed and the driver takes compressed textures (vid_menu.c VID_FidelityPresetAvailable) */
- {"ultrahighfidelity4k",16,{"Ultra High Fidelity - 4K",100,0,1,2,0,8,1,1},4,{5,4,1,3},1}	/* 3.56v: the owner's config.cfg: bloom 2, no SSAO, 8x MSAA, colour grade */
+ {"ultrahighfidelity4k",16,{"Ultra High Fidelity - 4K",100,0,1,2,2,8,1,1},4,{5,4,1,3},1}	/* Owner quality reference 2026-11-25: high bloom/SSAO, 8x MSAA, filmic and warm grade. */
 };
 #define GL_HIGHFI_COUNT (sizeof(gl_highfi_presets)/sizeof(gl_highfi_presets[0]))
 #define GL_VISUAL_PRESET_COUNT (GL_FIDELITY_COUNT+GL_HIGHFI_COUNT)
